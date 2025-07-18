@@ -110,7 +110,7 @@
                                 <td>
                                     <small class="text-muted">
                                         {% if user.created_at %}
-                                        {{ moment(user.created_at).format('MMM DD, YYYY') }}
+                                        {{ user.created_at[:10] if user.created_at and user.created_at|length > 10 else user.created_at }}
                                         {% else %}
                                         Unknown
                                         {% endif %}
@@ -119,7 +119,7 @@
                                 <td>
                                     <small class="text-muted">
                                         {% if user.last_login %}
-                                        {{ moment(user.last_login).fromNow() }}
+                                        {{ user.last_login[:10] if user.last_login and user.last_login|length > 10 else user.last_login }}
                                         {% else %}
                                         Never
                                         {% endif %}
@@ -226,37 +226,5 @@
 }
 </style>
 
-<script>
-// Add moment.js for date formatting if not already included
-if (typeof moment === 'undefined') {
-    // Simple date formatting fallback
-    window.moment = function(date) {
-        const d = new Date(date);
-        return {
-            format: function(format) {
-                if (format === 'MMM DD, YYYY') {
-                    return d.toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: '2-digit' 
-                    });
-                }
-                return d.toLocaleDateString();
-            },
-            fromNow: function() {
-                const now = new Date();
-                const diff = now - d;
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                
-                if (days === 0) return 'Today';
-                if (days === 1) return '1 day ago';
-                if (days < 7) return days + ' days ago';
-                if (days < 30) return Math.floor(days / 7) + ' weeks ago';
-                if (days < 365) return Math.floor(days / 30) + ' months ago';
-                return Math.floor(days / 365) + ' years ago';
-            }
-        };
-    };
-}
-</script>
+
 {% endblock %}

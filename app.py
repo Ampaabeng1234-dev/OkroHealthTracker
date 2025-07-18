@@ -27,6 +27,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_reset_on_return": "commit",
+    "connect_args": {"sslmode": "prefer"}
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -151,7 +153,10 @@ def log_system_event(event_type, event_data=None, user_id=None):
         db.session.commit()
     except Exception as e:
         logging.error(f"Error logging system event: {str(e)}")
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except:
+            pass  # If rollback fails, continue silently
 
 def get_disease_treatment(disease_name):
     """Get treatment for a specific disease"""
