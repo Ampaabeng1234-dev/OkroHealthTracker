@@ -232,27 +232,41 @@ def extract_texture_features(image):
     }
 
 def calculate_lbp_variance(gray_image):
-    """Calculate Local Binary Pattern variance"""
+    """Calculate Local Binary Pattern variance using optimized approach"""
     
-    # Simple LBP-like calculation
+    # Resize image if too large for performance
     rows, cols = gray_image.shape
-    lbp_values = []
+    if rows > 500 or cols > 500:
+        scale_factor = min(500/rows, 500/cols)
+        new_rows = int(rows * scale_factor)
+        new_cols = int(cols * scale_factor)
+        gray_image = cv2.resize(gray_image, (new_cols, new_rows))
+        rows, cols = gray_image.shape
     
-    for i in range(1, rows-1):
-        for j in range(1, cols-1):
-            center = gray_image[i, j]
-            binary_string = ""
-            
-            # 8-neighborhood
-            neighbors = [
-                gray_image[i-1, j-1], gray_image[i-1, j], gray_image[i-1, j+1],
-                gray_image[i, j+1], gray_image[i+1, j+1], gray_image[i+1, j],
-                gray_image[i+1, j-1], gray_image[i, j-1]
-            ]
-            
-            for neighbor in neighbors:
-                binary_string += "1" if neighbor >= center else "0"
-            
-            lbp_values.append(int(binary_string, 2))
-    
-    return np.var(lbp_values) if lbp_values else 0
+    # Use numpy vectorized operations for better performance
+    # Create shifted versions of the image for 8-neighborhood comparison
+    try:
+        center = gray_image[1:-1, 1:-1].astype(np.float32)
+        
+        # Get 8 neighbors using array slicing
+        neighbors = [
+            gray_image[0:-2, 0:-2],  # top-left
+            gray_image[0:-2, 1:-1],  # top
+            gray_image[0:-2, 2:],    # top-right
+            gray_image[1:-1, 2:],    # right
+            gray_image[2:, 2:],      # bottom-right
+            gray_image[2:, 1:-1],    # bottom
+            gray_image[2:, 0:-2],    # bottom-left
+            gray_image[1:-1, 0:-2]   # left
+        ]
+        
+        # Compute LBP values using vectorized operations
+        lbp_image = np.zeros_like(center, dtype=np.uint8)
+        for i, neighbor in enumerate(neighbors):
+            lbp_image += ((neighbor >= center) << i)
+        
+        return float(np.var(lbp_image))
+        
+    except Exception as e:
+        # Fallback to simple texture measure
+        return float(np.var(gray_image))

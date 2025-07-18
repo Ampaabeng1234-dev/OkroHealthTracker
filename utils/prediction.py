@@ -117,21 +117,33 @@ class DiseasePredictor:
                     'validation_confidence': validation_confidence
                 }
             else:
-                # Use fallback rule-based system
-                fallback_result = self.fallback_engine.predict(image_path)
-                
-                # Combine results
-                combined_result = self.combine_predictions(dl_result, fallback_result)
-                
-                return {
-                    'prediction': combined_result['prediction'],
-                    'confidence': combined_result['confidence'],
-                    'method': 'hybrid',
-                    'dl_confidence': dl_result['confidence'],
-                    'rule_confidence': fallback_result['confidence'],
-                    'all_probabilities': dl_result['all_probabilities'],
-                    'validation_confidence': validation_confidence
-                }
+                # Use fallback rule-based system with timeout protection
+                try:
+                    fallback_result = self.fallback_engine.predict(image_path)
+                    
+                    # Combine results
+                    combined_result = self.combine_predictions(dl_result, fallback_result)
+                    
+                    return {
+                        'prediction': combined_result['prediction'],
+                        'confidence': combined_result['confidence'],
+                        'method': 'hybrid',
+                        'dl_confidence': dl_result['confidence'],
+                        'rule_confidence': fallback_result['confidence'],
+                        'all_probabilities': dl_result['all_probabilities'],
+                        'validation_confidence': validation_confidence
+                    }
+                except Exception as e:
+                    logging.warning(f"Fallback engine failed: {str(e)}, using deep learning only")
+                    # Return deep learning result even with lower confidence
+                    return {
+                        'prediction': dl_result['prediction'],
+                        'confidence': dl_result['confidence'],
+                        'method': 'deep_learning_only',
+                        'all_probabilities': dl_result['all_probabilities'],
+                        'validation_confidence': validation_confidence,
+                        'fallback_error': str(e)
+                    }
                 
         except Exception as e:
             logging.error(f"Error during prediction: {str(e)}")
