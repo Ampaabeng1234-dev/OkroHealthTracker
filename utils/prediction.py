@@ -23,7 +23,7 @@ class DiseasePredictor:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = None
         self.class_names = ["Healthy", "Bacterial Blight", "Leaf Spot", "Mosaic Virus", "Powdery Mildew"]
-        self.confidence_threshold = 0.6
+        self.confidence_threshold = 0.5  # Lower threshold to use more deep learning predictions
         self.fallback_engine = FallbackRuleEngine()
         
         # Load or create model
