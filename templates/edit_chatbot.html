@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Chatbot - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit Chatbot: {{ chatbot.name }}
+                </h2>
+                <a href="{{ url_for('admin_chatbot') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Chatbots
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- Basic Configuration -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-cog me-2"></i>Basic Configuration
+                            </h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Chatbot Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-robot"></i>
+                                </span>
+                                <input type="text" class="form-control" id="name" name="name" required maxlength="100" 
+                                       value="{{ chatbot.name }}" placeholder="e.g., Okra Health Assistant">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="response_tone" class="form-label">Response Tone</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-palette"></i>
+                                </span>
+                                <select class="form-select" id="response_tone" name="response_tone">
+                                    <option value="helpful" {{ 'selected' if chatbot.response_tone == 'helpful' else '' }}>Helpful</option>
+                                    <option value="formal" {{ 'selected' if chatbot.response_tone == 'formal' else '' }}>Formal</option>
+                                    <option value="friendly" {{ 'selected' if chatbot.response_tone == 'friendly' else '' }}>Friendly</option>
+                                    <option value="technical" {{ 'selected' if chatbot.response_tone == 'technical' else '' }}>Technical</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                                <textarea class="form-control" id="description" name="description" rows="2" maxlength="500" 
+                                          placeholder="Brief description of what this chatbot does...">{{ chatbot.description or '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Configuration -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-brain me-2"></i>AI Configuration
+                            </h5>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="system_prompt" class="form-label">System Prompt *</label>
+                            <textarea class="form-control" id="system_prompt" name="system_prompt" rows="8" required 
+                                      placeholder="You are an AI assistant specializing in okra plant health and disease management...">{{ chatbot.system_prompt }}</textarea>
+                            <div class="form-text">This defines the chatbot's personality, expertise, and behavior.</div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="greeting_message" class="form-label">Greeting Message</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-comment"></i>
+                                </span>
+                                <textarea class="form-control" id="greeting_message" name="greeting_message" rows="2" 
+                                          placeholder="Hello! I'm here to help you with okra plant health questions.">{{ chatbot.greeting_message or '' }}</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Advanced Settings -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-sliders-h me-2"></i>Advanced Settings
+                            </h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="max_conversation_length" class="form-label">Max Conversation Length</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-comments"></i>
+                                </span>
+                                <input type="number" class="form-control" id="max_conversation_length" name="max_conversation_length" 
+                                       value="{{ chatbot.max_conversation_length }}" min="5" max="100">
+                                <span class="input-group-text">messages</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="supported_languages" class="form-label">Primary Language</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-language"></i>
+                                </span>
+                                <select class="form-select" id="supported_languages" name="supported_languages">
+                                    {% set current_lang = chatbot.supported_languages | from_json | first if chatbot.supported_languages else 'en' %}
+                                    <option value="en" {{ 'selected' if current_lang == 'en' else '' }}>English</option>
+                                    <option value="es" {{ 'selected' if current_lang == 'es' else '' }}>Spanish</option>
+                                    <option value="fr" {{ 'selected' if current_lang == 'fr' else '' }}>French</option>
+                                    <option value="pt" {{ 'selected' if current_lang == 'pt' else '' }}>Portuguese</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="knowledge_base" class="form-label">Knowledge Base (JSON)</label>
+                            <textarea class="form-control" id="knowledge_base" name="knowledge_base" rows="4" 
+                                      placeholder='{"common_questions": {"watering": "Water okra plants deeply...", "fertilizer": "Use balanced fertilizer..."}}'
+                                      >{{ chatbot.knowledge_base or '' }}</textarea>
+                            <div class="form-text">Optional: Structured knowledge in JSON format</div>
+                        </div>
+                        
+                        <!-- Status and Statistics -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-chart-bar me-2"></i>Status & Statistics
+                            </h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                       {{ 'checked' if chatbot.is_active else '' }}>
+                                <label class="form-check-label" for="is_active">
+                                    <strong>Active Chatbot</strong>
+                                </label>
+                                <div class="form-text">Only one chatbot can be active at a time</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Usage Statistics</label>
+                            <div class="card">
+                                <div class="card-body py-2">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <small class="text-muted">Conversations</small>
+                                            <div class="fw-bold">{{ chatbot.conversations|length }}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Created</small>
+                                            <div class="fw-bold">{{ chatbot.created_at.strftime('%m/%d/%y') if chatbot.created_at else 'Unknown' }}</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Updated</small>
+                                            <div class="fw-bold">{{ chatbot.updated_at.strftime('%m/%d/%y') if chatbot.updated_at else 'Never' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Creator Information -->
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-muted">Creator Information</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" value="Created by: {{ chatbot.creator.username if chatbot.creator else 'Unknown' }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" value="Created on: {{ chatbot.created_at.strftime('%B %d, %Y at %H:%M') if chatbot.created_at else 'Unknown' }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="{{ url_for('admin_chatbot') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                    <button type="button" class="btn btn-outline-info ms-2" data-bs-toggle="modal" data-bs-target="#testModal">
+                                        <i class="fas fa-play me-2"></i>Test Chatbot
+                                    </button>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Modal -->
+<div class="modal fade" id="testModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-play me-2"></i>Test Chatbot: {{ chatbot.name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="testChat" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; padding: 15px; margin-bottom: 15px; background-color: #f8f9fa;">
+                    <div class="message mb-3">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="fas fa-robot text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-0">{{ chatbot.greeting_message or 'Hello! How can I help you?' }}</p>
+                                </div>
+                                <small class="text-muted">{{ chatbot.name }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="testInput" placeholder="Type a test message..." maxlength="500">
+                    <button class="btn btn-primary" type="button" id="testSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="form-text">Test your chatbot configuration before saving</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change History -->
+{% if chatbot.updated_at %}
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Conversations (Last 5)
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if chatbot.conversations %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Title</th>
+                                    <th>Messages</th>
+                                    <th>Started</th>
+                                    <th>Last Activity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for conv in chatbot.conversations[:5] %}
+                                <tr>
+                                    <td>{{ conv.user.username if conv.user else 'Unknown' }}</td>
+                                    <td>{{ conv.title or 'Untitled Chat' }}</td>
+                                    <td>{{ conv.messages|length }}</td>
+                                    <td>{{ conv.started_at.strftime('%m/%d %H:%M') if conv.started_at else 'Unknown' }}</td>
+                                    <td>{{ conv.last_message_at.strftime('%m/%d %H:%M') if conv.last_message_at else 'Unknown' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No conversations yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const knowledgeBaseTextarea = document.getElementById('knowledge_base');
+    const testInput = document.getElementById('testInput');
+    const testSendBtn = document.getElementById('testSendBtn');
+    const testChat = document.getElementById('testChat');
+    
+    // JSON validation
+    knowledgeBaseTextarea.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && value.length > 0) {
+            try {
+                JSON.parse(value);
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } catch (e) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        } else {
+            this.classList.remove('is-invalid', 'is-valid');
+        }
+    });
+    
+    // Test chat functionality
+    function sendTestMessage() {
+        const message = testInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addTestMessage('user', message, 'You');
+        testInput.value = '';
+        testSendBtn.disabled = true;
+        
+        // Add typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message mb-3 typing-indicator';
+        typingDiv.innerHTML = `
+            <div class="d-flex align-items-start">
+                <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                    <i class="fas fa-robot text-white"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-0"><i class="fas fa-circle-notch fa-spin me-2"></i>Thinking...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        testChat.appendChild(typingDiv);
+        testChat.scrollTop = testChat.scrollHeight;
+        
+        // Simulate response (in real implementation, this would call the API)
+        setTimeout(() => {
+            const responses = [
+                "This is a test response from the chatbot. In the actual implementation, this would use the OpenAI API with your configured system prompt.",
+                "I can help you with okra plant health questions. This response is simulated for testing purposes.",
+                "Based on your system prompt configuration, I would provide helpful advice about plant care and disease management.",
+                "Test mode: Your chatbot is configured with a " + document.getElementById('response_tone').value + " response tone."
+            ];
+            
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            
+            // Remove typing indicator
+            typingDiv.remove();
+            
+            // Add bot response
+            addTestMessage('bot', randomResponse, '{{ chatbot.name }}');
+            testSendBtn.disabled = false;
+            testInput.focus();
+        }, 1500);
+    }
+    
+    function addTestMessage(type, content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message mb-3';
+        
+        const isUser = type === 'user';
+        const avatarBg = isUser ? 'bg-success' : 'bg-primary';
+        const avatarIcon = isUser ? 'fa-user' : 'fa-robot';
+        const bubbleBg = isUser ? 'bg-primary text-white' : 'bg-light';
+        
+        messageDiv.innerHTML = `
+            <div class="d-flex align-items-start ${isUser ? 'flex-row-reverse' : ''}">
+                <div class="${avatarBg} rounded-circle me-3 ms-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                    <i class="fas ${avatarIcon} text-white"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="${bubbleBg} p-3 rounded ${isUser ? 'ms-auto' : ''}" style="max-width: 80%;">
+                        <p class="mb-0">${escapeHtml(content)}</p>
+                    </div>
+                    <small class="text-muted ${isUser ? 'text-end d-block' : ''}">${sender}</small>
+                </div>
+            </div>
+        `;
+        
+        testChat.appendChild(messageDiv);
+        testChat.scrollTop = testChat.scrollHeight;
+    }
+    
+    // Test chat event listeners
+    testSendBtn.addEventListener('click', sendTestMessage);
+    testInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendTestMessage();
+        }
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const systemPrompt = document.getElementById('system_prompt').value.trim();
+        
+        if (!name || !systemPrompt) {
+            e.preventDefault();
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Validate JSON if provided
+        const knowledgeBase = knowledgeBaseTextarea.value.trim();
+        if (knowledgeBase) {
+            try {
+                JSON.parse(knowledgeBase);
+            } catch (e) {
+                e.preventDefault();
+                showToast('Invalid JSON in knowledge base field', 'error');
+                knowledgeBaseTextarea.focus();
+                return;
+            }
+        }
+        
+        // Show loading state
+        const submitBtn = document.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+    });
+    
+    // Utility functions
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

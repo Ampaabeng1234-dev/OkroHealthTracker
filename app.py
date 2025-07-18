@@ -11,10 +11,11 @@ import uuid
 from utils.preprocessing import preprocess_image
 from utils.prediction import predict_disease
 from utils.access_control import login_required, admin_required
+from utils.chatbot import chatbot_service
 import cv2
 import numpy as np
 from PIL import Image
-from database_models import db, User, Prediction, UserFeedback, SystemLog, DiseaseClass
+from database_models import db, User, Prediction, UserFeedback, SystemLog, DiseaseClass, UserProfile, ChatbotConfig, ChatConversation, ChatMessage
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -609,6 +610,350 @@ def delete_user(user_id):
         flash('Error deleting user.', 'error')
     
     return redirect(url_for('manage_users'))
+
+# ============ User Profile Routes ============
+
+@app.route('/profile')
+@login_required
+def user_profile():
+    """Display user profile page"""
+    user = User.query.get(session['user_id'])
+    profile = UserProfile.query.filter_by(user_id=session['user_id']).first()
+    
+    return render_template('profile.html', user=user, profile=profile)
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    """Edit user profile"""
+    user = User.query.get(session['user_id'])
+    profile = UserProfile.query.filter_by(user_id=session['user_id']).first()
+    
+    if request.method == 'POST':
+        try:
+            # Create profile if it doesn't exist
+            if not profile:
+                profile = UserProfile(user_id=session['user_id'])
+                db.session.add(profile)
+            
+            # Update profile fields
+            profile.first_name = request.form.get('first_name', '').strip()
+            profile.last_name = request.form.get('last_name', '').strip()
+            profile.phone = request.form.get('phone', '').strip()
+            profile.location = request.form.get('location', '').strip()
+            profile.bio = request.form.get('bio', '').strip()
+            profile.organization = request.form.get('organization', '').strip()
+            profile.expertise_level = request.form.get('expertise_level', 'beginner')
+            profile.preferred_language = request.form.get('preferred_language', 'en')
+            
+            # Handle date of birth
+            dob_str = request.form.get('date_of_birth', '').strip()
+            if dob_str:
+                try:
+                    profile.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
+                except ValueError:
+                    profile.date_of_birth = None
+            
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            
+            # Log the profile update
+            log_system_event('profile_updated', {
+                'user_id': session['user_id'],
+                'changes': 'Profile information updated'
+            }, session['user_id'])
+            
+            return redirect(url_for('user_profile'))
+            
+        except Exception as e:
+            logging.error(f"Error updating profile: {str(e)}")
+            db.session.rollback()
+            flash('Error updating profile. Please try again.', 'error')
+    
+    return render_template('edit_profile.html', user=user, profile=profile)
+
+# ============ Chatbot Routes ============
+
+@app.route('/chat')
+@login_required
+def chat_interface():
+    """Display chat interface for users"""
+    # Get active chatbot config
+    active_chatbot = ChatbotConfig.query.filter_by(is_active=True).first()
+    
+    if not active_chatbot:
+        flash('Chat service is currently unavailable. Please contact an administrator.', 'warning')
+        return redirect(url_for('index'))
+    
+    # Get user's recent conversations
+    recent_conversations = ChatConversation.query.filter_by(
+        user_id=session['user_id'], 
+        chatbot_config_id=active_chatbot.id
+    ).order_by(ChatConversation.last_message_at.desc()).limit(10).all()
+    
+    return render_template('chat.html', 
+                         chatbot=active_chatbot, 
+                         conversations=recent_conversations,
+                         openai_available=chatbot_service.is_available())
+
+@app.route('/chat/send', methods=['POST'])
+@login_required
+def send_chat_message():
+    """Send a chat message and get response"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        conversation_id = data.get('conversation_id')
+        
+        if not message:
+            return jsonify({'success': False, 'error': 'Message cannot be empty'})
+        
+        # Get active chatbot config
+        active_chatbot = ChatbotConfig.query.filter_by(is_active=True).first()
+        if not active_chatbot:
+            return jsonify({'success': False, 'error': 'Chat service unavailable'})
+        
+        # Handle conversation
+        if conversation_id:
+            # Existing conversation
+            conversation = ChatConversation.query.filter_by(
+                id=conversation_id, 
+                user_id=session['user_id']
+            ).first()
+            if not conversation:
+                return jsonify({'success': False, 'error': 'Conversation not found'})
+        else:
+            # New conversation
+            conversation = ChatConversation(
+                user_id=session['user_id'],
+                chatbot_config_id=active_chatbot.id,
+                session_id=str(uuid.uuid4()),
+                title=chatbot_service.generate_conversation_title(message),
+                started_at=datetime.utcnow(),
+                last_message_at=datetime.utcnow()
+            )
+            db.session.add(conversation)
+            db.session.flush()  # Get conversation ID
+        
+        # Save user message
+        user_message = ChatMessage(
+            conversation_id=conversation.id,
+            message_type='user',
+            content=message,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(user_message)
+        
+        # Get conversation history for context
+        history = ChatMessage.query.filter_by(
+            conversation_id=conversation.id
+        ).order_by(ChatMessage.created_at.asc()).all()
+        
+        history_dicts = [msg.to_dict() for msg in history]
+        
+        # Generate bot response
+        bot_response, success = chatbot_service.generate_response(
+            active_chatbot.to_dict(),
+            history_dicts,
+            message
+        )
+        
+        # Save bot response
+        bot_message = ChatMessage(
+            conversation_id=conversation.id,
+            message_type='bot',
+            content=bot_response,
+            extra_data=json.dumps({'openai_success': success}),
+            created_at=datetime.utcnow()
+        )
+        db.session.add(bot_message)
+        
+        # Update conversation
+        conversation.last_message_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'conversation_id': conversation.id,
+            'bot_response': bot_response,
+            'conversation_title': conversation.title,
+            'openai_success': success
+        })
+        
+    except Exception as e:
+        logging.error(f"Error in chat message: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'An error occurred while processing your message'})
+
+@app.route('/chat/conversations')
+@login_required
+def get_chat_conversations():
+    """Get user's chat conversations"""
+    try:
+        conversations = ChatConversation.query.filter_by(
+            user_id=session['user_id']
+        ).order_by(ChatConversation.last_message_at.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'conversations': [conv.to_dict() for conv in conversations]
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting conversations: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to load conversations'})
+
+@app.route('/chat/conversation/<int:conversation_id>')
+@login_required
+def get_conversation_messages(conversation_id):
+    """Get messages for a specific conversation"""
+    try:
+        conversation = ChatConversation.query.filter_by(
+            id=conversation_id, 
+            user_id=session['user_id']
+        ).first_or_404()
+        
+        messages = ChatMessage.query.filter_by(
+            conversation_id=conversation_id
+        ).order_by(ChatMessage.created_at.asc()).all()
+        
+        return jsonify({
+            'success': True,
+            'conversation': conversation.to_dict(),
+            'messages': [msg.to_dict() for msg in messages]
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting conversation messages: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to load conversation'})
+
+# ============ Admin Chatbot Management Routes ============
+
+@app.route('/admin/chatbot')
+@admin_required
+def admin_chatbot():
+    """Admin chatbot management page"""
+    chatbots = ChatbotConfig.query.order_by(ChatbotConfig.created_at.desc()).all()
+    conversations_count = ChatConversation.query.count()
+    messages_count = ChatMessage.query.count()
+    
+    return render_template('admin_chatbot.html', 
+                         chatbots=chatbots,
+                         conversations_count=conversations_count,
+                         messages_count=messages_count,
+                         openai_available=chatbot_service.is_available())
+
+@app.route('/admin/chatbot/create', methods=['GET', 'POST'])
+@admin_required
+def create_chatbot():
+    """Create new chatbot configuration"""
+    if request.method == 'POST':
+        try:
+            # Deactivate other chatbots if this one should be active
+            if request.form.get('is_active') == 'on':
+                ChatbotConfig.query.update({'is_active': False})
+            
+            chatbot = ChatbotConfig(
+                name=request.form['name'],
+                description=request.form.get('description', ''),
+                system_prompt=request.form['system_prompt'],
+                greeting_message=request.form.get('greeting_message', 'Hello! How can I help you?'),
+                max_conversation_length=int(request.form.get('max_conversation_length', 20)),
+                is_active=bool(request.form.get('is_active')),
+                response_tone=request.form.get('response_tone', 'helpful'),
+                supported_languages=json.dumps([request.form.get('supported_languages', 'en')]),
+                knowledge_base=request.form.get('knowledge_base', ''),
+                created_by=session['user_id']
+            )
+            
+            db.session.add(chatbot)
+            db.session.commit()
+            
+            flash('Chatbot created successfully!', 'success')
+            
+            # Log the creation
+            log_system_event('chatbot_created', {
+                'chatbot_name': chatbot.name,
+                'created_by': session['username']
+            }, session['user_id'])
+            
+            return redirect(url_for('admin_chatbot'))
+            
+        except Exception as e:
+            logging.error(f"Error creating chatbot: {str(e)}")
+            db.session.rollback()
+            flash('Error creating chatbot. Please try again.', 'error')
+    
+    return render_template('create_chatbot.html')
+
+@app.route('/admin/chatbot/<int:chatbot_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def edit_chatbot(chatbot_id):
+    """Edit chatbot configuration"""
+    chatbot = ChatbotConfig.query.get_or_404(chatbot_id)
+    
+    if request.method == 'POST':
+        try:
+            # Deactivate other chatbots if this one should be active
+            if request.form.get('is_active') == 'on' and not chatbot.is_active:
+                ChatbotConfig.query.filter(ChatbotConfig.id != chatbot_id).update({'is_active': False})
+            
+            chatbot.name = request.form['name']
+            chatbot.description = request.form.get('description', '')
+            chatbot.system_prompt = request.form['system_prompt']
+            chatbot.greeting_message = request.form.get('greeting_message', 'Hello! How can I help you?')
+            chatbot.max_conversation_length = int(request.form.get('max_conversation_length', 20))
+            chatbot.is_active = bool(request.form.get('is_active'))
+            chatbot.response_tone = request.form.get('response_tone', 'helpful')
+            chatbot.supported_languages = json.dumps([request.form.get('supported_languages', 'en')])
+            chatbot.knowledge_base = request.form.get('knowledge_base', '')
+            
+            db.session.commit()
+            
+            flash('Chatbot updated successfully!', 'success')
+            
+            # Log the update
+            log_system_event('chatbot_updated', {
+                'chatbot_name': chatbot.name,
+                'updated_by': session['username']
+            }, session['user_id'])
+            
+            return redirect(url_for('admin_chatbot'))
+            
+        except Exception as e:
+            logging.error(f"Error updating chatbot: {str(e)}")
+            db.session.rollback()
+            flash('Error updating chatbot. Please try again.', 'error')
+    
+    return render_template('edit_chatbot.html', chatbot=chatbot)
+
+@app.route('/admin/chatbot/<int:chatbot_id>/delete', methods=['POST'])
+@admin_required
+def delete_chatbot(chatbot_id):
+    """Delete chatbot configuration"""
+    chatbot = ChatbotConfig.query.get_or_404(chatbot_id)
+    
+    try:
+        chatbot_name = chatbot.name
+        
+        # Log before deletion
+        log_system_event('chatbot_deleted', {
+            'chatbot_name': chatbot_name,
+            'deleted_by': session['username']
+        }, session['user_id'])
+        
+        db.session.delete(chatbot)
+        db.session.commit()
+        
+        flash(f'Chatbot "{chatbot_name}" has been deleted.', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error deleting chatbot: {str(e)}")
+        db.session.rollback()
+        flash('Error deleting chatbot.', 'error')
+    
+    return redirect(url_for('admin_chatbot'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

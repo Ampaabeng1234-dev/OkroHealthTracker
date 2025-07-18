@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Assistant - OkroHealthDetector{% endblock %}
+
+{% block content %}
+<div class="row h-100">
+    <!-- Chat Sidebar -->
+    <div class="col-md-3 border-end">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-comments me-2"></i>Conversations
+                </h6>
+                <button class="btn btn-sm btn-primary" id="newChatBtn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                <div id="conversationsList">
+                    {% if conversations %}
+                        {% for conv in conversations %}
+                        <div class="conversation-item p-3 border-bottom" data-conversation-id="{{ conv.id }}" style="cursor: pointer;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ conv.title or 'Chat ' + conv.id|string }}</h6>
+                                    <small class="text-muted">{{ conv.last_message_at.strftime('%m/%d %H:%M') }}</small>
+                                </div>
+                                <small class="badge bg-secondary">{{ conv.message_count }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="p-3 text-center text-muted">
+                            <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                            <p class="mb-0">No conversations yet</p>
+                            <small>Click + to start chatting</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chat Main Area -->
+    <div class="col-md-9">
+        <div class="card h-100">
+            <!-- Chat Header -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0" id="chatTitle">
+                        <i class="fas fa-robot me-2"></i>{{ chatbot.name }}
+                    </h5>
+                    <small class="text-muted">{{ chatbot.description or 'Your AI assistant for okra plant health' }}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    {% if not openai_available %}
+                    <span class="badge bg-warning me-2">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Limited Mode
+                    </span>
+                    {% endif %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-circle me-1"></i>Online
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div class="card-body d-flex flex-column" style="height: 500px;">
+                <div id="chatMessages" class="flex-grow-1 overflow-auto p-3" style="min-height: 0;">
+                    <!-- Welcome Message -->
+                    <div class="message bot-message mb-3">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="fas fa-robot text-white"></i>
+                            </div>
+                            <div class="message-content flex-grow-1">
+                                <div class="message-bubble bg-light p-3 rounded">
+                                    <p class="mb-0">{{ chatbot.greeting_message }}</p>
+                                </div>
+                                <small class="text-muted">{{ chatbot.name }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Input -->
+                <div class="border-top pt-3">
+                    <form id="chatForm" class="d-flex">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="messageInput" 
+                                   placeholder="Ask about okra plant diseases, care tips, or any questions..." 
+                                   autocomplete="off" maxlength="1000">
+                            <button class="btn btn-primary" type="submit" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div id="typingIndicator" class="mt-2" style="display: none;">
+                        <small class="text-muted">
+                            <i class="fas fa-circle-notch fa-spin me-1"></i>
+                            {{ chatbot.name }} is typing...
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Chat Assistant Help
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>What can I ask about?</h6>
+                <ul>
+                    <li>Okra disease identification and treatment</li>
+                    <li>Plant care and maintenance tips</li>
+                    <li>Fertilization and watering advice</li>
+                    <li>Pest management strategies</li>
+                    <li>Growing conditions and best practices</li>
+                </ul>
+                
+                <h6 class="mt-3">Sample Questions:</h6>
+                <div class="row">
+                    <div class="col-12">
+                        <button class="btn btn-outline-primary btn-sm me-2 mb-2 sample-question">
+                            What causes leaf spots on okra?
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm me-2 mb-2 sample-question">
+                            How often should I water okra plants?
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm me-2 mb-2 sample-question">
+                            What's the best fertilizer for okra?
+                        </button>
+                    </div>
+                </div>
+                
+                {% if not openai_available %}
+                <div class="alert alert-warning mt-3">
+                    <strong>Limited Mode:</strong> The AI assistant is currently running in limited mode. 
+                    Some advanced features may not be available. Contact an administrator to enable full AI capabilities.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Button -->
+<div class="position-fixed bottom-0 end-0 p-3">
+    <button class="btn btn-info rounded-circle" data-bs-toggle="modal" data-bs-target="#helpModal">
+        <i class="fas fa-question"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentConversationId = null;
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const chatForm = document.getElementById('chatForm');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const conversationsList = document.getElementById('conversationsList');
+    
+    // Auto-focus on message input
+    messageInput.focus();
+    
+    // Handle chat form submission
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (message) {
+            sendMessage(message);
+        }
+    });
+    
+    // Handle new chat button
+    newChatBtn.addEventListener('click', function() {
+        startNewConversation();
+    });
+    
+    // Handle conversation selection
+    conversationsList.addEventListener('click', function(e) {
+        const conversationItem = e.target.closest('.conversation-item');
+        if (conversationItem) {
+            const conversationId = conversationItem.dataset.conversationId;
+            loadConversation(conversationId);
+        }
+    });
+    
+    // Handle sample questions
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('sample-question')) {
+            messageInput.value = e.target.textContent;
+            document.querySelector('#helpModal .btn-close').click();
+            messageInput.focus();
+        }
+    });
+    
+    // Send message function
+    function sendMessage(message) {
+        // Disable input
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+        
+        // Add user message to chat
+        addMessageToChat('user', message, 'You');
+        
+        // Clear input
+        messageInput.value = '';
+        
+        // Show typing indicator
+        typingIndicator.style.display = 'block';
+        
+        // Send to server
+        fetch('{{ url_for("send_chat_message") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                conversation_id: currentConversationId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            typingIndicator.style.display = 'none';
+            
+            if (data.success) {
+                // Set conversation ID if it's a new conversation
+                if (!currentConversationId) {
+                    currentConversationId = data.conversation_id;
+                    updateChatTitle(data.conversation_title || 'New Chat');
+                    refreshConversationsList();
+                }
+                
+                // Add bot response
+                addMessageToChat('bot', data.bot_response, '{{ chatbot.name }}');
+                
+                // Show warning if OpenAI failed
+                if (!data.openai_success) {
+                    showToast('Response generated in limited mode', 'warning');
+                }
+            } else {
+                addMessageToChat('system', 'Error: ' + (data.error || 'Failed to send message'), 'System');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            typingIndicator.style.display = 'none';
+            addMessageToChat('system', 'Network error. Please check your connection and try again.', 'System');
+        })
+        .finally(() => {
+            // Re-enable input
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+        });
+    }
+    
+    // Add message to chat display
+    function addMessageToChat(type, content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}-message mb-3`;
+        
+        const isUser = type === 'user';
+        const isSystem = type === 'system';
+        
+        let avatarIcon = 'fa-robot';
+        let avatarBg = 'bg-primary';
+        
+        if (isUser) {
+            avatarIcon = 'fa-user';
+            avatarBg = 'bg-success';
+        } else if (isSystem) {
+            avatarIcon = 'fa-exclamation-triangle';
+            avatarBg = 'bg-warning';
+        }
+        
+        messageDiv.innerHTML = `
+            <div class="d-flex align-items-start ${isUser ? 'flex-row-reverse' : ''}">
+                <div class="avatar ${avatarBg} rounded-circle me-3 ms-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                    <i class="fas ${avatarIcon} text-white"></i>
+                </div>
+                <div class="message-content flex-grow-1">
+                    <div class="message-bubble ${isUser ? 'bg-primary text-white ms-auto' : isSystem ? 'bg-warning' : 'bg-light'} p-3 rounded" style="max-width: 80%;">
+                        <p class="mb-0">${escapeHtml(content)}</p>
+                    </div>
+                    <small class="text-muted ${isUser ? 'text-end d-block' : ''}">${sender} • ${new Date().toLocaleTimeString()}</small>
+                </div>
+            </div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Load conversation
+    function loadConversation(conversationId) {
+        fetch(`{{ url_for("get_conversation_messages", conversation_id=0) }}`.replace('0', conversationId))
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentConversationId = conversationId;
+                updateChatTitle(data.conversation.title || 'Chat');
+                
+                // Clear messages except welcome message
+                const welcomeMessage = chatMessages.querySelector('.message.bot-message');
+                chatMessages.innerHTML = '';
+                if (welcomeMessage) {
+                    chatMessages.appendChild(welcomeMessage);
+                }
+                
+                // Add conversation messages
+                data.messages.forEach(msg => {
+                    const sender = msg.message_type === 'user' ? 'You' : '{{ chatbot.name }}';
+                    addMessageToChat(msg.message_type, msg.content, sender);
+                });
+                
+                // Update active conversation
+                document.querySelectorAll('.conversation-item').forEach(item => {
+                    item.classList.remove('bg-primary', 'text-white');
+                });
+                document.querySelector(`[data-conversation-id="${conversationId}"]`)?.classList.add('bg-primary', 'text-white');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading conversation:', error);
+            showToast('Failed to load conversation', 'error');
+        });
+    }
+    
+    // Start new conversation
+    function startNewConversation() {
+        currentConversationId = null;
+        updateChatTitle('{{ chatbot.name }}');
+        
+        // Clear messages except welcome
+        const welcomeMessage = chatMessages.querySelector('.message.bot-message');
+        chatMessages.innerHTML = '';
+        if (welcomeMessage) {
+            chatMessages.appendChild(welcomeMessage);
+        }
+        
+        // Remove active conversation highlight
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.classList.remove('bg-primary', 'text-white');
+        });
+        
+        messageInput.focus();
+    }
+    
+    // Update chat title
+    function updateChatTitle(title) {
+        document.getElementById('chatTitle').innerHTML = `<i class="fas fa-robot me-2"></i>${escapeHtml(title)}`;
+    }
+    
+    // Refresh conversations list
+    function refreshConversationsList() {
+        fetch('{{ url_for("get_chat_conversations") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update conversations list
+                // This is a simplified version - in production you'd want to update the DOM more efficiently
+                location.reload(); // For now, just reload the page
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing conversations:', error);
+        });
+    }
+    
+    // Utility functions
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function showToast(message, type = 'info') {
+        // Simple toast implementation
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+    
+    // Keyboard shortcuts
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+});
+</script>
+{% endblock %}

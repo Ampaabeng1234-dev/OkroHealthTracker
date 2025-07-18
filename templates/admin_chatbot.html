@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Chatbot Management - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="fas fa-robot me-2"></i>
+        Chatbot Management
+    </h2>
+    <a href="{{ url_for('create_chatbot') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create New Chatbot
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-robot text-primary" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Chatbots</h5>
+                <p class="card-text fs-3 text-primary">{{ chatbots|length }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-comments text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Conversations</h5>
+                <p class="card-text fs-3 text-success">{{ conversations_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-message text-info" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Messages</h5>
+                <p class="card-text fs-3 text-info">{{ messages_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-{{ 'check-circle text-success' if openai_available else 'exclamation-triangle text-warning' }}" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">AI Status</h5>
+                <p class="card-text text-{{ 'success' if openai_available else 'warning' }}">
+                    {{ 'Connected' if openai_available else 'Limited Mode' }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OpenAI Status Alert -->
+{% if not openai_available %}
+<div class="alert alert-warning">
+    <h6><i class="fas fa-exclamation-triangle me-2"></i>OpenAI API Not Available</h6>
+    <p class="mb-2">The OpenAI API is not currently available. This could be due to:</p>
+    <ul class="mb-2">
+        <li>Missing OPENAI_API_KEY environment variable</li>
+        <li>Invalid API key</li>
+        <li>OpenAI service issues</li>
+    </ul>
+    <p class="mb-0">The chatbot will operate in limited mode with basic responses. Contact your system administrator to resolve this issue.</p>
+</div>
+{% endif %}
+
+<!-- Chatbots List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            Chatbot Configurations
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if chatbots %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Tone</th>
+                            <th>Created By</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chatbot in chatbots %}
+                        <tr class="{{ 'table-success' if chatbot.is_active else '' }}">
+                            <td>
+                                <strong>{{ chatbot.name }}</strong>
+                                {% if chatbot.is_active %}
+                                    <span class="badge bg-success ms-2">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ chatbot.description[:100] + '...' if chatbot.description and chatbot.description|length > 100 else chatbot.description or 'No description' }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if chatbot.is_active else 'secondary' }}">
+                                    {{ 'Active' if chatbot.is_active else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ chatbot.response_tone.title() }}</span>
+                            </td>
+                            <td>{{ chatbot.creator.username if chatbot.creator else 'Unknown' }}</td>
+                            <td>{{ chatbot.created_at.strftime('%Y-%m-%d') if chatbot.created_at else 'Unknown' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('edit_chatbot', chatbot_id=chatbot.id) }}" 
+                                       class="btn btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-info" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#previewModal{{ chatbot.id }}" 
+                                            title="Preview">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal{{ chatbot.id }}" 
+                                            title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-robot text-muted" style="font-size: 4rem;"></i>
+                <h5 class="mt-3 text-muted">No Chatbots Created</h5>
+                <p class="text-muted">Create your first chatbot to get started with AI-powered assistance.</p>
+                <a href="{{ url_for('create_chatbot') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create First Chatbot
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modals for each chatbot -->
+{% for chatbot in chatbots %}
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal{{ chatbot.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>Preview: {{ chatbot.name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Basic Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td>{{ chatbot.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if chatbot.is_active else 'secondary' }}">
+                                        {{ 'Active' if chatbot.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Response Tone:</strong></td>
+                                <td>{{ chatbot.response_tone.title() }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Max Conversation Length:</strong></td>
+                                <td>{{ chatbot.max_conversation_length }} messages</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Usage Statistics</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Conversations:</strong></td>
+                                <td>{{ chatbot.conversations|length }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created:</strong></td>
+                                <td>{{ chatbot.created_at.strftime('%Y-%m-%d %H:%M') if chatbot.created_at else 'Unknown' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Updated:</strong></td>
+                                <td>{{ chatbot.updated_at.strftime('%Y-%m-%d %H:%M') if chatbot.updated_at else 'Never' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <h6 class="mt-3">Description</h6>
+                <p class="text-muted">{{ chatbot.description or 'No description provided' }}</p>
+                
+                <h6>Greeting Message</h6>
+                <div class="border p-3 rounded bg-light">
+                    {{ chatbot.greeting_message }}
+                </div>
+                
+                <h6 class="mt-3">System Prompt</h6>
+                <div class="border p-3 rounded bg-light" style="max-height: 200px; overflow-y: auto;">
+                    <pre style="white-space: pre-wrap; margin: 0;">{{ chatbot.system_prompt }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal{{ chatbot.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash me-2"></i>Delete Chatbot
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning!</strong> This action cannot be undone.
+                </div>
+                <p>Are you sure you want to delete the chatbot <strong>"{{ chatbot.name }}"</strong>?</p>
+                <p class="text-muted">This will also delete:</p>
+                <ul class="text-muted">
+                    <li>{{ chatbot.conversations|length }} conversation(s)</li>
+                    <li>All associated chat messages</li>
+                    <li>Chatbot configuration and settings</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('delete_chatbot', chatbot_id=chatbot.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Chatbot
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Navigation Links -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-link me-2"></i>
+                    Quick Links
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('manage_users') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-users me-2"></i>Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('chat_interface') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-comments me-2"></i>Test Chat
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('create_chatbot') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-plus me-2"></i>Create Chatbot
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

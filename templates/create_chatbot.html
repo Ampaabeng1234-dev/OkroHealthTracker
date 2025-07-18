@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}Create Chatbot - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    Create New Chatbot
+                </h2>
+                <a href="{{ url_for('admin_chatbot') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Chatbots
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- Basic Configuration -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-cog me-2"></i>Basic Configuration
+                            </h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Chatbot Name *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-robot"></i>
+                                </span>
+                                <input type="text" class="form-control" id="name" name="name" required maxlength="100" 
+                                       placeholder="e.g., Okra Health Assistant">
+                            </div>
+                            <div class="form-text">Choose a friendly, descriptive name for your chatbot</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="response_tone" class="form-label">Response Tone</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-palette"></i>
+                                </span>
+                                <select class="form-select" id="response_tone" name="response_tone">
+                                    <option value="helpful" selected>Helpful</option>
+                                    <option value="formal">Formal</option>
+                                    <option value="friendly">Friendly</option>
+                                    <option value="technical">Technical</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                                <textarea class="form-control" id="description" name="description" rows="2" maxlength="500" 
+                                          placeholder="Brief description of what this chatbot does..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Configuration -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-brain me-2"></i>AI Configuration
+                            </h5>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="system_prompt" class="form-label">System Prompt *</label>
+                            <textarea class="form-control" id="system_prompt" name="system_prompt" rows="6" required 
+                                      placeholder="You are an AI assistant specializing in okra plant health and disease management..."></textarea>
+                            <div class="form-text">This defines the chatbot's personality, expertise, and behavior. Be specific and detailed.</div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="greeting_message" class="form-label">Greeting Message</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-comment"></i>
+                                </span>
+                                <textarea class="form-control" id="greeting_message" name="greeting_message" rows="2" 
+                                          placeholder="Hello! I'm here to help you with okra plant health questions."></textarea>
+                            </div>
+                            <div class="form-text">The first message users see when starting a chat</div>
+                        </div>
+                        
+                        <!-- Advanced Settings -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-sliders-h me-2"></i>Advanced Settings
+                            </h5>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="max_conversation_length" class="form-label">Max Conversation Length</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-comments"></i>
+                                </span>
+                                <input type="number" class="form-control" id="max_conversation_length" name="max_conversation_length" 
+                                       value="20" min="5" max="100">
+                                <span class="input-group-text">messages</span>
+                            </div>
+                            <div class="form-text">Number of previous messages to consider for context</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="supported_languages" class="form-label">Primary Language</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-language"></i>
+                                </span>
+                                <select class="form-select" id="supported_languages" name="supported_languages">
+                                    <option value="en" selected>English</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="fr">French</option>
+                                    <option value="pt">Portuguese</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <label for="knowledge_base" class="form-label">Knowledge Base (JSON)</label>
+                            <textarea class="form-control" id="knowledge_base" name="knowledge_base" rows="4" 
+                                      placeholder='{"common_questions": {"watering": "Water okra plants deeply but infrequently...", "fertilizer": "Use balanced fertilizer every 4-6 weeks..."}}'></textarea>
+                            <div class="form-text">Optional: Structured knowledge in JSON format for specific topics</div>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="col-12 mb-4">
+                            <h5 class="border-bottom pb-2">
+                                <i class="fas fa-toggle-on me-2"></i>Status
+                            </h5>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                <label class="form-check-label" for="is_active">
+                                    <strong>Activate this chatbot</strong>
+                                </label>
+                                <div class="form-text">Only one chatbot can be active at a time. Activating this will deactivate others.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('admin_chatbot') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Create Chatbot
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Suggestions -->
+<div class="row justify-content-center mt-4">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    System Prompt Templates
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <strong>General Agriculture Assistant</strong>
+                            </div>
+                            <div class="card-body">
+                                <small class="text-muted">
+                                    You are an AI assistant specializing in okra plant health and disease management. You have expertise in agricultural practices, plant pathology, and sustainable farming methods. Provide helpful, accurate information about plant care, disease identification, treatment recommendations, and best practices. Always recommend consulting with local agricultural experts for complex issues.
+                                </small>
+                                <button class="btn btn-sm btn-outline-primary mt-2 template-btn" data-template="general">
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <strong>Technical Expert</strong>
+                            </div>
+                            <div class="card-body">
+                                <small class="text-muted">
+                                    You are a technical agricultural specialist with deep expertise in plant pathology, soil science, and integrated pest management. Provide detailed, scientific explanations for plant health issues. Use technical terminology when appropriate but ensure explanations are understandable. Include specific treatment protocols, chemical recommendations, and preventive measures.
+                                </small>
+                                <button class="btn btn-sm btn-outline-primary mt-2 template-btn" data-template="technical">
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <strong>Beginner-Friendly Helper</strong>
+                            </div>
+                            <div class="card-body">
+                                <small class="text-muted">
+                                    You are a friendly agricultural assistant who specializes in helping beginners with okra gardening. Use simple, clear language and avoid technical jargon. Provide step-by-step instructions, basic care tips, and encouragement. Focus on practical, easy-to-follow advice for home gardeners and small-scale farmers.
+                                </small>
+                                <button class="btn btn-sm btn-outline-primary mt-2 template-btn" data-template="beginner">
+                                    Use Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const systemPromptTextarea = document.getElementById('system_prompt');
+    const knowledgeBaseTextarea = document.getElementById('knowledge_base');
+    
+    // Template system prompts
+    const templates = {
+        general: `You are an AI assistant specializing in okra plant health and disease management. You have expertise in agricultural practices, plant pathology, and sustainable farming methods.
+
+Your role is to:
+- Help identify plant diseases and health issues
+- Provide treatment recommendations and preventive measures
+- Offer guidance on plant care, watering, fertilization, and harvesting
+- Share best practices for sustainable okra cultivation
+- Assist with pest management strategies
+
+Guidelines:
+- Always provide accurate, helpful information
+- Use clear, understandable language
+- Recommend consulting local agricultural experts for complex issues
+- Consider regional growing conditions when possible
+- Emphasize organic and sustainable practices when appropriate
+- If uncertain about a diagnosis, recommend professional consultation`,
+
+        technical: `You are a technical agricultural specialist with deep expertise in plant pathology, soil science, and integrated pest management (IPM) for okra cultivation.
+
+Your expertise includes:
+- Advanced plant disease diagnosis and etiology
+- Soil chemistry, nutrient management, and plant nutrition
+- Pest identification and biological control methods
+- Chemical treatment protocols and application timing
+- Environmental factors affecting plant health
+- Research-based agricultural practices
+
+Communication style:
+- Provide detailed, scientific explanations
+- Use appropriate technical terminology with clear definitions
+- Include specific treatment protocols and dosage recommendations
+- Reference agricultural research and best practices
+- Consider environmental impact and sustainability
+- Recommend integrated management approaches`,
+
+        beginner: `You are a friendly agricultural assistant who loves helping people grow healthy okra plants. You specialize in making gardening accessible and enjoyable for beginners.
+
+Your approach:
+- Use simple, clear language without confusing jargon
+- Provide step-by-step instructions that are easy to follow
+- Offer encouragement and positive reinforcement
+- Share practical tips for home gardens and small plots
+- Focus on basic care fundamentals
+- Help troubleshoot common beginner mistakes
+
+Personality:
+- Patient and understanding
+- Enthusiastic about gardening
+- Practical and down-to-earth
+- Encouraging and supportive
+- Always willing to explain things simply
+
+Remember: Every expert was once a beginner. Your goal is to help new gardeners feel confident and successful with their okra plants.`
+    };
+    
+    // Handle template buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('template-btn')) {
+            const template = e.target.dataset.template;
+            if (templates[template]) {
+                systemPromptTextarea.value = templates[template];
+                systemPromptTextarea.focus();
+                
+                // Show success message
+                showToast('Template applied successfully!', 'success');
+            }
+        }
+    });
+    
+    // JSON validation for knowledge base
+    knowledgeBaseTextarea.addEventListener('blur', function() {
+        const value = this.value.trim();
+        if (value && value.length > 0) {
+            try {
+                JSON.parse(value);
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } catch (e) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        } else {
+            this.classList.remove('is-invalid', 'is-valid');
+        }
+    });
+    
+    // Character counter for system prompt
+    function updateCharCount() {
+        const length = systemPromptTextarea.value.length;
+        const formText = systemPromptTextarea.nextElementSibling;
+        
+        if (length > 1000) {
+            formText.textContent = `${length} characters (consider keeping it concise for better performance)`;
+            formText.className = 'form-text text-warning';
+        } else {
+            formText.textContent = 'This defines the chatbot\'s personality, expertise, and behavior. Be specific and detailed.';
+            formText.className = 'form-text';
+        }
+    }
+    
+    systemPromptTextarea.addEventListener('input', updateCharCount);
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const systemPrompt = systemPromptTextarea.value.trim();
+        
+        if (!name || !systemPrompt) {
+            e.preventDefault();
+            showToast('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        // Validate JSON if provided
+        const knowledgeBase = knowledgeBaseTextarea.value.trim();
+        if (knowledgeBase) {
+            try {
+                JSON.parse(knowledgeBase);
+            } catch (e) {
+                e.preventDefault();
+                showToast('Invalid JSON in knowledge base field', 'error');
+                knowledgeBaseTextarea.focus();
+                return;
+            }
+        }
+        
+        // Show loading state
+        const submitBtn = document.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+    });
+    
+    // Utility function
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}
