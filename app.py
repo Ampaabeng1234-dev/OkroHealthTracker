@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -69,6 +70,16 @@ def load_config():
 
 config = load_config()
 
+def save_config(config_data):
+    """Save configuration to JSON file"""
+    try:
+        with open('config.json', 'w') as f:
+            json.dump(config_data, f, indent=2)
+        return True
+    except Exception as e:
+        logging.error(f"Error saving config: {str(e)}")
+        return False
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -97,20 +108,95 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        action = request.form.get('action', 'login')
         
-        if username in config['users']:
-            user = config['users'][username]
-            if check_password_hash(user['password_hash'], password):
-                session['username'] = username
-                session['role'] = user['role']
-                flash('Login successful!', 'success')
-                return redirect(url_for('index'))
-        
-        flash('Invalid username or password!', 'error')
+        if action == 'login':
+            username = request.form['username']
+            password = request.form['password']
+            
+            if username in config['users']:
+                user = config['users'][username]
+                if check_password_hash(user['password_hash'], password):
+                    session['username'] = username
+                    session['role'] = user['role']
+                    flash('Login successful!', 'success')
+                    return redirect(url_for('index'))
+            
+            flash('Invalid username or password!', 'error')
     
     return render_template('login.html')
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        username = request.form['username'].strip()
+        email = request.form['email'].strip()
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        role = request.form['role']
+        
+        # Validation
+        if not username or len(username) < 3 or len(username) > 20:
+            flash('Username must be between 3 and 20 characters!', 'error')
+            return redirect(url_for('login'))
+        
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            flash('Username can only contain letters, numbers, and underscores!', 'error')
+            return redirect(url_for('login'))
+        
+        if username in config['users']:
+            flash('Username already exists! Please choose a different username.', 'error')
+            return redirect(url_for('login'))
+        
+        if not email or '@' not in email:
+            flash('Please enter a valid email address!', 'error')
+            return redirect(url_for('login'))
+        
+        # Check if email already exists
+        for user_data in config['users'].values():
+            if user_data.get('email') == email:
+                flash('Email address already registered! Please use a different email.', 'error')
+                return redirect(url_for('login'))
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long!', 'error')
+            return redirect(url_for('login'))
+        
+        if password != confirm_password:
+            flash('Passwords do not match!', 'error')
+            return redirect(url_for('login'))
+        
+        if role not in ['user', 'admin']:
+            flash('Invalid account type selected!', 'error')
+            return redirect(url_for('login'))
+        
+        # Create new user
+        password_hash = generate_password_hash(password)
+        config['users'][username] = {
+            'password_hash': password_hash,
+            'email': email,
+            'role': role,
+            'created_at': datetime.now().isoformat(),
+            'active': True
+        }
+        
+        # Save updated config
+        save_config(config)
+        
+        # Log the registration
+        logging.info(f"New user registered: {username} ({role}) with email {email}")
+        
+        # Auto-login the user
+        session['username'] = username
+        session['role'] = role
+        
+        flash(f'Account created successfully! Welcome, {username}!', 'success')
+        return redirect(url_for('index'))
+        
+    except Exception as e:
+        logging.error(f"Error during registration: {str(e)}")
+        flash('An error occurred during registration. Please try again.', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():

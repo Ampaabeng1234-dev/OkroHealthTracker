@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
+    <div class="col-md-8 col-lg-6">
         <div class="card">
             <div class="card-header text-center">
                 <h3 class="mb-0">
@@ -14,37 +14,132 @@
                 <p class="text-muted mb-0">AI Disease Detection System</p>
             </div>
             <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-user"></i>
-                            </span>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-pills nav-fill mb-4" id="authTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login" type="button" role="tab">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register" type="button" role="tab">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="authTabsContent">
+                    <!-- Login Tab -->
+                    <div class="tab-pane fade show active" id="login" role="tabpanel">
+                        <form method="POST" action="{{ url_for('login') }}">
+                            <input type="hidden" name="action" value="login">
+                            <div class="mb-3">
+                                <label for="login_username" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="login_username" name="username" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="login_password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="login_password" name="password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Login
+                            </button>
+                        </form>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
+
+                    <!-- Register Tab -->
+                    <div class="tab-pane fade" id="register" role="tabpanel">
+                        <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+                            <div class="mb-3">
+                                <label for="reg_username" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="reg_username" name="username" required 
+                                           minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" 
+                                           title="Username must be 3-20 characters, letters, numbers, and underscores only">
+                                </div>
+                                <div class="form-text">3-20 characters, letters, numbers, and underscores only</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="reg_email" class="form-label">Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="reg_email" name="email" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="reg_password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="reg_password" name="password" required 
+                                           minlength="6" maxlength="50">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleRegPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Minimum 6 characters</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="reg_confirm_password" class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="reg_confirm_password" name="confirm_password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordFeedback" class="form-text"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="reg_role" class="form-label">Account Type</label>
+                                <select class="form-select" id="reg_role" name="role" required>
+                                    <option value="user" selected>User - Basic disease detection access</option>
+                                    <option value="admin">Admin - Full system management access</option>
+                                </select>
+                                <div class="form-text">Choose your account type based on your needs</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success w-100" id="registerBtn">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Create Account
+                            </button>
+                        </form>
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-sign-in-alt me-2"></i>
-                        Login
-                    </button>
-                </form>
+                </div>
             </div>
             <div class="card-footer">
                 <div class="row text-center">
                     <div class="col-12 mb-2">
-                        <small class="text-muted">Demo Accounts:</small>
+                        <small class="text-muted">Demo Accounts (for testing):</small>
                     </div>
                     <div class="col-6">
                         <div class="card bg-primary">
@@ -97,4 +192,253 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password visibility toggle functionality
+    function setupPasswordToggle(inputId, toggleId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleButton = document.getElementById(toggleId);
+        
+        if (passwordInput && toggleButton) {
+            toggleButton.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                const icon = toggleButton.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+        }
+    }
+    
+    // Setup password toggles
+    setupPasswordToggle('login_password', 'toggleLoginPassword');
+    setupPasswordToggle('reg_password', 'toggleRegPassword');
+    setupPasswordToggle('reg_confirm_password', 'toggleConfirmPassword');
+    
+    // Username validation
+    const usernameInput = document.getElementById('reg_username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            const username = this.value;
+            const feedback = this.parentElement.nextElementSibling;
+            
+            if (username.length < 3) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                feedback.textContent = 'Username must be at least 3 characters';
+                feedback.className = 'form-text text-danger';
+            } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                feedback.textContent = 'Username can only contain letters, numbers, and underscores';
+                feedback.className = 'form-text text-danger';
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                feedback.textContent = '3-20 characters, letters, numbers, and underscores only';
+                feedback.className = 'form-text text-muted';
+            }
+        });
+    }
+    
+    // Password strength validation
+    const passwordInput = document.getElementById('reg_password');
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let feedback = '';
+            
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            if (password.length < 6) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+                feedback = 'Password must be at least 6 characters';
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                
+                if (strength <= 2) {
+                    feedback = 'Weak password - consider adding uppercase, numbers, or symbols';
+                } else if (strength <= 4) {
+                    feedback = 'Good password strength';
+                } else {
+                    feedback = 'Strong password';
+                }
+            }
+            
+            const feedbackElement = this.parentElement.nextElementSibling;
+            feedbackElement.textContent = feedback;
+            feedbackElement.className = password.length < 6 ? 'form-text text-danger' : 'form-text text-muted';
+        });
+    }
+    
+    // Password confirmation validation
+    const confirmPasswordInput = document.getElementById('reg_confirm_password');
+    if (confirmPasswordInput && passwordInput) {
+        function validatePasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const feedback = document.getElementById('passwordFeedback');
+            
+            if (confirmPassword.length === 0) {
+                confirmPasswordInput.classList.remove('is-invalid', 'is-valid');
+                feedback.textContent = '';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                confirmPasswordInput.classList.remove('is-invalid');
+                confirmPasswordInput.classList.add('is-valid');
+                feedback.textContent = 'Passwords match';
+                feedback.className = 'form-text text-success';
+            } else {
+                confirmPasswordInput.classList.add('is-invalid');
+                confirmPasswordInput.classList.remove('is-valid');
+                feedback.textContent = 'Passwords do not match';
+                feedback.className = 'form-text text-danger';
+            }
+        }
+        
+        confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+        passwordInput.addEventListener('input', validatePasswordMatch);
+    }
+    
+    // Email validation
+    const emailInput = document.getElementById('reg_email');
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const email = this.value;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email.length === 0) {
+                this.classList.remove('is-invalid', 'is-valid');
+            } else if (emailPattern.test(email)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            }
+        });
+    }
+    
+    // Form submission validation
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            const username = document.getElementById('reg_username').value;
+            const email = document.getElementById('reg_email').value;
+            const password = document.getElementById('reg_password').value;
+            const confirmPassword = document.getElementById('reg_confirm_password').value;
+            
+            let isValid = true;
+            let errorMessage = '';
+            
+            // Validate username
+            if (username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+                isValid = false;
+                errorMessage = 'Please enter a valid username (3-20 characters, letters, numbers, and underscores only)';
+            }
+            
+            // Validate email
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                isValid = false;
+                errorMessage = 'Please enter a valid email address';
+            }
+            
+            // Validate password
+            if (password.length < 6) {
+                isValid = false;
+                errorMessage = 'Password must be at least 6 characters long';
+            }
+            
+            // Validate password confirmation
+            if (password !== confirmPassword) {
+                isValid = false;
+                errorMessage = 'Passwords do not match';
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                showAlert(errorMessage, 'error');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('registerBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+        });
+    }
+    
+    // Demo account quick fill
+    function fillDemoAccount(username, password, isLogin = true) {
+        const prefix = isLogin ? 'login_' : 'reg_';
+        document.getElementById(prefix + 'username').value = username;
+        document.getElementById(prefix + 'password').value = password;
+        
+        if (!isLogin) {
+            document.getElementById('reg_email').value = username + '@example.com';
+            document.getElementById('reg_confirm_password').value = password;
+            document.getElementById('reg_role').value = username === 'admin' ? 'admin' : 'user';
+        }
+    }
+    
+    // Add click handlers for demo account cards
+    document.addEventListener('click', function(e) {
+        const demoCard = e.target.closest('.card.bg-primary, .card.bg-secondary');
+        if (demoCard) {
+            const isAdmin = demoCard.classList.contains('bg-primary');
+            const username = isAdmin ? 'admin' : 'user';
+            const password = isAdmin ? 'admin123' : 'user123';
+            
+            // Check which tab is active
+            const activeTab = document.querySelector('#authTabs .nav-link.active');
+            const isLoginTab = activeTab && activeTab.id === 'login-tab';
+            
+            fillDemoAccount(username, password, isLoginTab);
+            
+            // Show tooltip or flash message
+            showAlert(`Filled ${username} credentials for ${isLoginTab ? 'login' : 'registration'}`, 'info');
+        }
+    });
+});
+
+// Utility function to show alerts
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 150);
+        }
+    }, 3000);
+}
+</script>
 {% endblock %}
