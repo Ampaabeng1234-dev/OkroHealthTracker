@@ -258,7 +258,7 @@ def validate_okra_leaf_image(image_path):
             # Check if it's completely uniform (like a solid color)
             is_completely_uniform = gray_std < 5 and avg_color_variation < 5
             is_too_small = height < 50 or width < 50
-            is_too_large = height > 5000 or width > 5000
+            is_too_large = height > 10000 or width > 10000
             
             if is_completely_uniform:
                 return False, confidence, "Image appears to be a solid color or uniform pattern"
@@ -277,19 +277,32 @@ def validate_okra_leaf_image(image_path):
 def preprocess_image_for_model(image_path, target_size=(224, 224)):
     """
     Preprocess image for model input with proper data type handling
+    Automatically handles large images by resizing them
     """
     try:
-        # Load and validate image first
-        is_valid, confidence, reason = validate_okra_leaf_image(image_path)
-        if not is_valid:
-            return None, f"Image validation failed: {reason}"
-        
-        # Load image
+        # Load image first to check dimensions
         image = Image.open(image_path).convert('RGB')
+        original_width, original_height = image.size
         
-        # Define transforms
+        logging.info(f"Original image size: {original_width}x{original_height}")
+        
+        # If image is very large, resize it first to a reasonable size before validation
+        if original_width > 2000 or original_height > 2000:
+            # Calculate new size maintaining aspect ratio
+            max_dimension = 2000
+            if original_width > original_height:
+                new_width = max_dimension
+                new_height = int((original_height * max_dimension) / original_width)
+            else:
+                new_height = max_dimension
+                new_width = int((original_width * max_dimension) / original_height)
+            
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            logging.info(f"Resized large image to: {new_width}x{new_height}")
+        
+        # Define transforms for model input
         transform = transforms.Compose([
-            transforms.Resize(target_size),
+            transforms.Resize(target_size),  # Resize to model input size
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
@@ -300,6 +313,7 @@ def preprocess_image_for_model(image_path, target_size=(224, 224)):
         # Ensure float32 data type
         tensor = tensor.float()
         
+        logging.info(f"Preprocessed tensor shape: {tensor.shape}")
         return tensor, None
         
     except Exception as e:
