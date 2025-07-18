@@ -17,15 +17,16 @@ Preferred communication style: Simple, everyday language.
 - **Template Engine**: Jinja2 templates extending from a base layout
 
 ### Backend Architecture
-- **Framework**: Flask web framework
+- **Framework**: Flask web framework with Flask-SQLAlchemy ORM
 - **Language**: Python 3.x
+- **Database**: PostgreSQL with structured data models
 - **Session Management**: Flask sessions with secure secret key
 - **File Handling**: Werkzeug utilities for secure file uploads
-- **Logging**: Python's built-in logging module
+- **Logging**: Database-based system logging with Python's built-in logging module
 
 ### Authentication System
 - **Method**: Username/password authentication with hashed passwords
-- **Storage**: JSON-based user configuration
+- **Storage**: PostgreSQL database with User model
 - **Roles**: Admin and User roles with different permission levels
 - **Security**: Werkzeug password hashing with decorators for route protection
 
@@ -52,20 +53,25 @@ Preferred communication style: Simple, everyday language.
 - **Admin Required**: Special permissions for system management
 - **Role-Based Features**: Different UI and functionality based on user role
 
-### Configuration Management
-- **JSON Configuration**: User accounts, disease classes, treatments stored in `config.json`
-- **Model Settings**: Confidence thresholds, preprocessing parameters
-- **Treatment Database**: Detailed treatment recommendations for each disease
+### Database Architecture
+- **PostgreSQL Database**: Comprehensive data models for users, predictions, feedback, and system logs
+- **User Management**: Secure user authentication with role-based access control
+- **Prediction Tracking**: Complete audit trail of all disease predictions with confidence scores
+- **Feedback System**: User feedback collection for continuous model improvement
+- **System Logging**: Comprehensive event logging for monitoring and debugging
+- **Disease Classes**: Structured disease information with treatments and severity levels
 
 ## Data Flow
 
-1. **User Login**: Authentication against JSON user database
-2. **Image Upload**: Secure file upload with validation
+1. **User Registration/Login**: Authentication against PostgreSQL user database with role-based access
+2. **Image Upload**: Secure file upload with validation and unique filename generation
 3. **Preprocessing**: Image enhancement and feature extraction
-4. **Primary Prediction**: UNet model inference
+4. **Primary Prediction**: UNet model inference with confidence scoring
 5. **Fallback Analysis**: Rule-based engine if confidence low
-6. **Result Compilation**: Combine predictions with treatment recommendations
-7. **Logging**: Store prediction results for admin review
+6. **Database Logging**: Store complete prediction data including processing time, confidence scores, and method used
+7. **Result Compilation**: Combine predictions with treatment recommendations from disease database
+8. **Feedback Collection**: User feedback stored in database for model improvement
+9. **Admin Monitoring**: Real-time statistics and logs accessible through admin dashboard
 
 ## External Dependencies
 
