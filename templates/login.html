@@ -119,14 +119,8 @@
                                 <div id="passwordFeedback" class="form-text"></div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="reg_role" class="form-label">Account Type</label>
-                                <select class="form-select" id="reg_role" name="role" required>
-                                    <option value="user" selected>User - Basic disease detection access</option>
-                                    <option value="admin">Admin - Full system management access</option>
-                                </select>
-                                <div class="form-text">Choose your account type based on your needs</div>
-                            </div>
+                            <!-- Account type is automatically set to 'user' and can be changed by admin -->
+                            <input type="hidden" name="role" value="user">
                             
                             <button type="submit" class="btn btn-success w-100" id="registerBtn">
                                 <i class="fas fa-user-plus me-2"></i>

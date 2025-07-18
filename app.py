@@ -266,9 +266,8 @@ def register():
             flash('Passwords do not match!', 'error')
             return redirect(url_for('login'))
         
-        if role not in ['user', 'admin']:
-            flash('Invalid account type selected!', 'error')
-            return redirect(url_for('login'))
+        # Force role to be 'user' for all registrations - admins assign admin privileges
+        role = 'user'
         
         # Create new user
         new_user = User(
@@ -493,6 +492,118 @@ def clear_logs():
         flash(f'Error clearing logs: {str(e)}', 'error')
     
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/users')
+@admin_required
+def manage_users():
+    """Admin user management interface"""
+    users = User.query.order_by(User.created_at.desc()).all()
+    user_list = []
+    
+    for user in users:
+        user_data = user.to_dict()
+        # Add statistics for each user
+        user_data['prediction_count'] = Prediction.query.filter_by(user_id=user.id).count()
+        user_data['feedback_count'] = UserFeedback.query.filter_by(user_id=user.id).count()
+        user_list.append(user_data)
+    
+    return render_template('admin_users.html', users=user_list)
+
+@app.route('/admin/users/<int:user_id>/toggle_role', methods=['POST'])
+@admin_required
+def toggle_user_role(user_id):
+    """Toggle user role between admin and user"""
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from demoting themselves
+    if user.id == session['user_id']:
+        flash('You cannot change your own role!', 'error')
+        return redirect(url_for('manage_users'))
+    
+    try:
+        # Toggle role
+        new_role = 'admin' if user.role == 'user' else 'user'
+        user.role = new_role
+        db.session.commit()
+        
+        # Log the role change
+        log_system_event('role_changed', {
+            'target_user': user.username,
+            'old_role': 'user' if new_role == 'admin' else 'admin',
+            'new_role': new_role
+        }, session['user_id'])
+        
+        flash(f'User {user.username} role changed to {new_role}.', 'success')
+    except Exception as e:
+        logging.error(f"Error changing user role: {str(e)}")
+        db.session.rollback()
+        flash('Error changing user role.', 'error')
+    
+    return redirect(url_for('manage_users'))
+
+@app.route('/admin/users/<int:user_id>/toggle_status', methods=['POST'])
+@admin_required
+def toggle_user_status(user_id):
+    """Toggle user active status"""
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from deactivating themselves
+    if user.id == session['user_id']:
+        flash('You cannot deactivate your own account!', 'error')
+        return redirect(url_for('manage_users'))
+    
+    try:
+        # Toggle active status
+        user.active = not user.active
+        db.session.commit()
+        
+        status = 'activated' if user.active else 'deactivated'
+        
+        # Log the status change
+        log_system_event('user_status_changed', {
+            'target_user': user.username,
+            'new_status': status
+        }, session['user_id'])
+        
+        flash(f'User {user.username} has been {status}.', 'success')
+    except Exception as e:
+        logging.error(f"Error changing user status: {str(e)}")
+        db.session.rollback()
+        flash('Error changing user status.', 'error')
+    
+    return redirect(url_for('manage_users'))
+
+@app.route('/admin/users/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    """Delete a user and all associated data"""
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent admin from deleting themselves
+    if user.id == session['user_id']:
+        flash('You cannot delete your own account!', 'error')
+        return redirect(url_for('manage_users'))
+    
+    try:
+        username = user.username
+        
+        # Log the deletion before deleting
+        log_system_event('user_deleted', {
+            'deleted_user': username,
+            'deleted_by': session['username']
+        }, session['user_id'])
+        
+        # Delete user (cascade will handle related records)
+        db.session.delete(user)
+        db.session.commit()
+        
+        flash(f'User {username} has been permanently deleted.', 'success')
+    except Exception as e:
+        logging.error(f"Error deleting user: {str(e)}")
+        db.session.rollback()
+        flash('Error deleting user.', 'error')
+    
+    return redirect(url_for('manage_users'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

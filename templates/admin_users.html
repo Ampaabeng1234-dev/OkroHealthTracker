@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-users me-2"></i>User Management</h2>
+                <p class="text-muted mb-0">Manage user accounts and permissions</p>
+            </div>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- User Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Users</h5>
+                        <h3 class="mb-0">{{ users|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Active Users</h5>
+                        <h3 class="mb-0">{{ users|selectattr('active')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Admins</h5>
+                        <h3 class="mb-0">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Regular Users</h5>
+                        <h3 class="mb-0">{{ users|selectattr('role', 'equalto', 'user')|list|length }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Users</h5>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Activity</th>
+                                <th>Joined</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr class="{% if not user.active %}table-secondary{% endif %}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-{{ 'warning' if user.role == 'admin' else 'primary' }} text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                                            <i class="fas fa-{{ 'crown' if user.role == 'admin' else 'user' }}"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            {% if user.id == session['user_id'] %}
+                                            <span class="badge bg-info ms-2">You</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if user.role == 'admin' else 'secondary' }}">
+                                        <i class="fas fa-{{ 'crown' if user.role == 'admin' else 'user' }} me-1"></i>
+                                        {{ user.role.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if user.active else 'danger' }}">
+                                        <i class="fas fa-{{ 'check' if user.active else 'times' }} me-1"></i>
+                                        {{ 'Active' if user.active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        <div><i class="fas fa-chart-line me-1"></i>{{ user.prediction_count }} predictions</div>
+                                        <div><i class="fas fa-comment me-1"></i>{{ user.feedback_count }} feedback</div>
+                                    </small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% if user.created_at %}
+                                        {{ moment(user.created_at).format('MMM DD, YYYY') }}
+                                        {% else %}
+                                        Unknown
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% if user.last_login %}
+                                        {{ moment(user.last_login).fromNow() }}
+                                        {% else %}
+                                        Never
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if user.id != session['user_id'] %}
+                                    <div class="btn-group" role="group">
+                                        <!-- Toggle Role -->
+                                        <form method="POST" action="{{ url_for('toggle_user_role', user_id=user.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-{{ 'secondary' if user.role == 'admin' else 'warning' }}" 
+                                                    title="{{ 'Demote to User' if user.role == 'admin' else 'Promote to Admin' }}"
+                                                    onclick="return confirm('Are you sure you want to change {{ user.username }}\'s role to {{ 'user' if user.role == 'admin' else 'admin' }}?')">
+                                                <i class="fas fa-{{ 'user' if user.role == 'admin' else 'crown' }}"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Toggle Status -->
+                                        <form method="POST" action="{{ url_for('toggle_user_status', user_id=user.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-{{ 'danger' if user.active else 'success' }}" 
+                                                    title="{{ 'Deactivate User' if user.active else 'Activate User' }}"
+                                                    onclick="return confirm('Are you sure you want to {{ 'deactivate' if user.active else 'activate' }} {{ user.username }}?')">
+                                                <i class="fas fa-{{ 'ban' if user.active else 'check' }}"></i>
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Delete User -->
+                                        <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                    title="Delete User"
+                                                    onclick="return confirm('Are you sure you want to permanently delete {{ user.username }}? This action cannot be undone and will remove all their data.')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">
+                                        <i class="fas fa-lock me-1"></i>
+                                        <small>Self</small>
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Users Found</h5>
+                    <p class="text-muted">No user accounts have been created yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Action Legend</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="mb-1"><i class="fas fa-crown text-warning me-2"></i><strong>Promote to Admin:</strong> Grant full system access</p>
+                            <p class="mb-1"><i class="fas fa-user text-secondary me-2"></i><strong>Demote to User:</strong> Remove admin privileges</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1"><i class="fas fa-check text-success me-2"></i><strong>Activate:</strong> Enable account access</p>
+                            <p class="mb-1"><i class="fas fa-ban text-danger me-2"></i><strong>Deactivate:</strong> Disable account access</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="mb-1"><i class="fas fa-trash text-danger me-2"></i><strong>Delete:</strong> Permanently remove account and all data</p>
+                            <p class="mb-1 text-muted"><small>Note: You cannot modify your own account</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+}
+
+.table th {
+    border-top: none;
+    background-color: var(--bs-light);
+    font-weight: 600;
+}
+
+.btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin-right: 2px;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+</style>
+
+<script>
+// Add moment.js for date formatting if not already included
+if (typeof moment === 'undefined') {
+    // Simple date formatting fallback
+    window.moment = function(date) {
+        const d = new Date(date);
+        return {
+            format: function(format) {
+                if (format === 'MMM DD, YYYY') {
+                    return d.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: '2-digit' 
+                    });
+                }
+                return d.toLocaleDateString();
+            },
+            fromNow: function() {
+                const now = new Date();
+                const diff = now - d;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                
+                if (days === 0) return 'Today';
+                if (days === 1) return '1 day ago';
+                if (days < 7) return days + ' days ago';
+                if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+                if (days < 365) return Math.floor(days / 30) + ' months ago';
+                return Math.floor(days / 365) + ' years ago';
+            }
+        };
+    };
+}
+</script>
+{% endblock %}
