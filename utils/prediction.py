@@ -9,6 +9,7 @@ import cv2
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import model_definitions
 UNetModel = model_definitions.UNetModel
+SimpleCNN = model_definitions.SimpleCNN
 create_dummy_model = model_definitions.create_dummy_model
 create_trained_model = model_definitions.create_trained_model
 validate_okra_leaf_image = model_definitions.validate_okra_leaf_image
