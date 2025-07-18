@@ -245,28 +245,30 @@ def validate_okra_leaf_image(image_path):
         confidence = sum(confidence_factors) if confidence_factors else 0.0
         confidence = min(confidence, 1.0)
         
-        # More lenient validation - accept if it passes basic checks
+        # Very lenient validation - accept most natural images
         passed_checks = sum([has_some_green, has_edges, has_texture, reasonable_shape, has_color_variation])
         
-        if passed_checks >= 3:  # Pass if at least 3 out of 5 checks pass
-            return True, confidence, "Image appears suitable for analysis"
-        elif passed_checks >= 2:  # Cautious acceptance
-            return True, confidence * 0.7, "Image may be suitable but quality is uncertain"
+        # Accept if any meaningful criteria are met
+        if passed_checks >= 2:  # Pass if at least 2 out of 5 checks pass
+            return True, confidence, "Image accepted for analysis"
+        elif passed_checks >= 1:  # Very cautious acceptance
+            return True, confidence * 0.5, "Image accepted with low confidence"
         else:
-            # Be more specific about what failed
-            failed_reasons = []
-            if not has_some_green:
-                failed_reasons.append("insufficient green content")
-            if not has_edges:
-                failed_reasons.append("lacks natural edges")
-            if not has_texture:
-                failed_reasons.append("insufficient texture")
-            if not reasonable_shape:
-                failed_reasons.append("unusual aspect ratio")
-            if not has_color_variation:
-                failed_reasons.append("uniform coloring")
+            # Only reject if it's clearly not a natural image
+            # Check if it's completely uniform (like a solid color)
+            is_completely_uniform = gray_std < 5 and avg_color_variation < 5
+            is_too_small = height < 50 or width < 50
+            is_too_large = height > 5000 or width > 5000
             
-            return False, confidence, f"Image validation failed: {', '.join(failed_reasons)}"
+            if is_completely_uniform:
+                return False, confidence, "Image appears to be a solid color or uniform pattern"
+            elif is_too_small:
+                return False, confidence, "Image is too small for reliable analysis"
+            elif is_too_large:
+                return False, confidence, "Image is too large for processing"
+            else:
+                # Accept even if it doesn't pass other checks - let the model decide
+                return True, 0.3, "Image accepted for analysis (quality uncertain)"
             
     except Exception as e:
         logging.error(f"Error validating image: {str(e)}")

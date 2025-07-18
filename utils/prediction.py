@@ -72,10 +72,11 @@ class DiseasePredictor:
             dict: Prediction results
         """
         try:
-            # First validate that the image contains an okra leaf
+            # Validate that the image contains reasonable content
             is_valid, validation_confidence, validation_reason = validate_okra_leaf_image(image_path)
             
-            if not is_valid:
+            # For now, let's be very permissive and only reject clearly invalid images
+            if not is_valid and validation_confidence < 0.1:
                 return {
                     'prediction': 'Invalid Input',
                     'confidence': 0.0,
