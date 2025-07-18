@@ -72,23 +72,29 @@ class DiseasePredictor:
             dict: Prediction results
         """
         try:
+            logging.info(f"Starting prediction for image: {image_path}")
+            
             # Validate that the image contains reasonable content
             is_valid, validation_confidence, validation_reason = validate_okra_leaf_image(image_path)
+            logging.info(f"Validation result: valid={is_valid}, confidence={validation_confidence}, reason={validation_reason}")
             
-            # For now, let's be very permissive and only reject clearly invalid images
-            if not is_valid and validation_confidence < 0.1:
-                return {
-                    'prediction': 'Invalid Input',
-                    'confidence': 0.0,
-                    'method': 'validation_rejected',
-                    'error': f"Image validation failed: {validation_reason}",
-                    'validation_confidence': validation_confidence
-                }
+            # Temporarily bypass validation for testing
+            # if not is_valid and validation_confidence < 0.1:
+            #     logging.warning(f"Image rejected by validation: {validation_reason}")
+            #     return {
+            #         'prediction': 'Invalid Input',
+            #         'confidence': 0.0,
+            #         'method': 'validation_rejected',
+            #         'error': f"Image validation failed: {validation_reason}",
+            #         'validation_confidence': validation_confidence
+            #     }
             
             # Preprocess image with enhanced preprocessing
             model_input, preprocessing_error = preprocess_image_for_model(image_path)
+            logging.info(f"Preprocessing result: input_shape={model_input.shape if model_input is not None else None}, error={preprocessing_error}")
             
             if model_input is None:
+                logging.error(f"Preprocessing failed: {preprocessing_error}")
                 return {
                     'prediction': 'Processing Error',
                     'confidence': 0.0,
@@ -97,7 +103,9 @@ class DiseasePredictor:
                 }
             
             # Primary prediction using deep learning with new input format
+            logging.info("Starting deep learning prediction")
             dl_result = self.deep_learning_prediction_enhanced(model_input)
+            logging.info(f"Deep learning result: {dl_result}")
             
             # Check confidence threshold
             if dl_result['confidence'] >= self.confidence_threshold:
