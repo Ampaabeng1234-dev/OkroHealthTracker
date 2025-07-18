@@ -1,0 +1,40 @@
+{
+  "users": {
+    "admin": {
+      "password_hash": "scrypt:32768:8:1$GxwKHLVeX4Gkmu2o$46267c8a8c4ce8e1c7e7e8c2a0e9e3e1e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8",
+      "role": "admin"
+    },
+    "user": {
+      "password_hash": "scrypt:32768:8:1$GxwKHLVeX4Gkmu2o$36267c8a8c4ce8e1c7e7e8c2a0e9e3e1e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8",
+      "role": "user"
+    }
+  },
+  "disease_classes": [
+    "Healthy",
+    "Bacterial Blight",
+    "Leaf Spot",
+    "Mosaic Virus",
+    "Powdery Mildew"
+  ],
+  "treatments": {
+    "Healthy": "No treatment needed. Continue good care practices including proper watering, adequate spacing for air circulation, and regular monitoring for early signs of disease.",
+    "Bacterial Blight": "Apply copper-based fungicide early in the morning or late evening. Remove and destroy infected leaves. Improve air circulation by proper plant spacing. Avoid overhead watering and work with plants when they are dry.",
+    "Leaf Spot": "Use fungicidal spray containing chlorothalonil or copper compounds. Remove fallen leaves and plant debris. Avoid overhead watering. Water at soil level to keep leaves dry. Ensure good air circulation.",
+    "Mosaic Virus": "Remove and destroy infected plants immediately to prevent spread. Control aphid vectors using insecticidal soap or neem oil. Use virus-free certified seeds. Practice crop rotation and weed control around the field.",
+    "Powdery Mildew": "Apply sulfur-based fungicide or baking soda solution (1 tsp per quart water). Improve air circulation around plants. Reduce humidity by avoiding overhead watering. Remove affected plant parts early morning when spores are less likely to spread."
+  },
+  "model_settings": {
+    "confidence_threshold": 0.6,
+    "image_size": [224, 224],
+    "preprocessing": {
+      "normalize": true,
+      "enhance_edges": true,
+      "color_correction": true
+    }
+  },
+  "system_info": {
+    "version": "1.0.0",
+    "last_updated": "2024-01-15",
+    "description": "OkroHealthDetector - AI-powered okra leaf disease detection system with hybrid diagnostic approach"
+  }
+}

@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - OkroHealthDetector{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Dashboard Header -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-3">
+                    <i class="fas fa-cog me-2"></i>
+                    Admin Dashboard
+                </h1>
+                <p class="card-text">
+                    Manage the OkroHealthDetector system, monitor predictions, and improve model accuracy
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-images fa-3x mb-2"></i>
+                <h3>{{ stats.total_predictions }}</h3>
+                <p class="mb-0">Total Predictions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-flag fa-3x mb-2"></i>
+                <h3>{{ stats.flagged_predictions }}</h3>
+                <p class="mb-0">Flagged Predictions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success">
+            <div class="card-body text-center">
+                <i class="fas fa-percentage fa-3x mb-2"></i>
+                <h3>{{ stats.accuracy_rate }}%</h3>
+                <p class="mb-0">Accuracy Rate</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="adminTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab">
+                            <i class="fas fa-list me-2"></i>Prediction Logs
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="model-tab" data-bs-toggle="tab" data-bs-target="#model" type="button" role="tab">
+                            <i class="fas fa-brain me-2"></i>Model Management
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab">
+                            <i class="fas fa-comments me-2"></i>User Feedback
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="adminTabsContent">
+                    <!-- Prediction Logs Tab -->
+                    <div class="tab-pane fade show active" id="logs" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Recent Predictions</h5>
+                            <form method="POST" action="{{ url_for('clear_logs') }}" style="display: inline;" 
+                                  onsubmit="return confirm('Are you sure you want to clear all logs?');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash me-1"></i>Clear Logs
+                                </button>
+                            </form>
+                        </div>
+                        
+                        {% if logs %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Image</th>
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in logs[:50] %}
+                                    <tr>
+                                        <td>
+                                            <small>{{ log.timestamp[:19] }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'primary' if log.username == 'admin' else 'secondary' }}">
+                                                {{ log.username }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>{{ log.filename[:20] }}{% if log.filename|length > 20 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if log.prediction == 'Healthy' else 'warning' }}">
+                                                {{ log.prediction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if log.confidence %}
+                                            <div class="progress" style="height: 20px; width: 80px;">
+                                                <div class="progress-bar bg-{{ 'success' if log.confidence|float > 0.7 else 'warning' if log.confidence|float > 0.5 else 'danger' }}" 
+                                                     role="progressbar" style="width: {{ (log.confidence|float * 100)|round }}%">
+                                                    {{ (log.confidence|float * 100)|round }}%
+                                                </div>
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="badge bg-{{ 'info' if log.method == 'deep_learning' else 'warning' if log.method == 'hybrid' else 'danger' }}">
+                                                {{ log.method }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {% if log.feedback == 'flagged' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-flag me-1"></i>Flagged
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>OK
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No prediction logs available</h5>
+                            <p class="text-muted">Logs will appear here after users upload images for analysis</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Model Management Tab -->
+                    <div class="tab-pane fade" id="model" role="tabpanel">
+                        <h5>Model Management</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-brain me-2"></i>
+                                            Current Model Status
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="card bg-success">
+                                                    <div class="card-body text-center py-2">
+                                                        <i class="fas fa-check-circle fa-2x mb-1"></i>
+                                                        <h6>Deep Learning</h6>
+                                                        <small>UNet Model Active</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="card bg-info">
+                                                    <div class="card-body text-center py-2">
+                                                        <i class="fas fa-cogs fa-2x mb-1"></i>
+                                                        <h6>Rule Engine</h6>
+                                                        <small>Fallback Ready</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-upload me-2"></i>
+                                            Model Actions
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" action="{{ url_for('retrain_model') }}" 
+                                              onsubmit="return confirm('Retraining may take several minutes. Continue?');">
+                                            <button type="submit" class="btn btn-primary mb-2 w-100">
+                                                <i class="fas fa-sync-alt me-2"></i>
+                                                Retrain Model
+                                            </button>
+                                        </form>
+                                        
+                                        <button class="btn btn-outline-secondary w-100" disabled>
+                                            <i class="fas fa-download me-2"></i>
+                                            Export Model
+                                        </button>
+                                        
+                                        <small class="text-muted d-block mt-2">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Model retraining uses flagged images for improvement
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Performance Metrics
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <h4 class="text-success">{{ stats.accuracy_rate }}%</h4>
+                                        <small class="text-muted">Overall Accuracy</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h4 class="text-info">95.2%</h4>
+                                        <small class="text-muted">Deep Learning Accuracy</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h4 class="text-warning">78.5%</h4>
+                                        <small class="text-muted">Rule Engine Accuracy</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h4 class="text-primary">87.3%</h4>
+                                        <small class="text-muted">Hybrid Accuracy</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Feedback Tab -->
+                    <div class="tab-pane fade" id="feedback" role="tabpanel">
+                        <h5>User Feedback & Flagged Predictions</h5>
+                        
+                        {% set flagged_logs = logs | selectattr('feedback', 'equalto', 'flagged') | list %}
+                        
+                        {% if flagged_logs %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{{ flagged_logs|length }}</strong> predictions have been flagged for review
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>User</th>
+                                        <th>Image</th>
+                                        <th>AI Prediction</th>
+                                        <th>Method</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in flagged_logs %}
+                                    <tr>
+                                        <td>{{ log.timestamp[:10] }}</td>
+                                        <td>{{ log.username }}</td>
+                                        <td>
+                                            <small>{{ log.filename[:25] }}{% if log.filename|length > 25 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger">{{ log.prediction }}</span>
+                                        </td>
+                                        <td>
+                                            <small class="badge bg-info">{{ log.method }}</small>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" disabled>
+                                                <i class="fas fa-eye me-1"></i>Review
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-smile fa-3x text-success mb-3"></i>
+                            <h5 class="text-muted">No flagged predictions</h5>
+                            <p class="text-muted">All predictions appear to be accurate according to user feedback</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

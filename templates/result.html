@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Result - OkroHealthDetector{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Result Header -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title mb-3">
+                    <i class="fas fa-microscope me-2"></i>
+                    Disease Analysis Complete
+                </h1>
+                <p class="card-text">
+                    AI analysis of your okra leaf image is ready
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Image Display -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    Analyzed Image
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ url_for('static', filename='uploads/' + filename) }}" 
+                     class="img-fluid rounded" alt="Analyzed leaf image" 
+                     style="max-height: 400px;">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Diagnosis Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Primary Result -->
+                <div class="mb-4">
+                    <h3 class="mb-2">
+                        <span class="badge bg-{{ 'success' if result.prediction == 'Healthy' else 'warning' if result.confidence > 0.6 else 'danger' }} fs-6">
+                            {{ result.prediction }}
+                        </span>
+                    </h3>
+                    
+                    <!-- Confidence Bar -->
+                    <div class="mb-3">
+                        <label class="form-label">Confidence Level</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-{{ 'success' if result.confidence > 0.7 else 'warning' if result.confidence > 0.5 else 'danger' }}" 
+                                 role="progressbar" style="width: {{ (result.confidence * 100)|round }}%">
+                                {{ (result.confidence * 100)|round }}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detection Method -->
+                    <div class="mb-3">
+                        <label class="form-label">Detection Method</label>
+                        <div>
+                            {% if result.method == 'deep_learning' %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-brain me-1"></i>Deep Learning (UNet)
+                            </span>
+                            {% elif result.method == 'hybrid' %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-cogs me-1"></i>Hybrid AI (DL + Rules)
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-list me-1"></i>Rule-Based
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Hybrid Details -->
+                    {% if result.method == 'hybrid' %}
+                    <div class="card bg-light mb-3">
+                        <div class="card-body py-2">
+                            <small class="text-muted">
+                                <strong>Hybrid Analysis:</strong><br>
+                                Deep Learning: {{ (result.dl_confidence * 100)|round }}% confidence<br>
+                                Rule Engine: {{ (result.rule_confidence * 100)|round }}% confidence
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- All Probabilities -->
+                {% if result.all_probabilities %}
+                <div class="mb-4">
+                    <label class="form-label">Disease Probabilities</label>
+                    {% for disease, prob in result.all_probabilities.items() %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>{{ disease }}</small>
+                            <small>{{ (prob * 100)|round }}%</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-{{ 'success' if disease == result.prediction else 'secondary' }}" 
+                                 role="progressbar" style="width: {{ (prob * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Treatment Recommendations -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-prescription-bottle-alt me-2"></i>
+                    Treatment Recommendations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if result.prediction == 'Healthy' %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Good news!</strong> Your okra leaf appears healthy.
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Disease detected:</strong> {{ result.prediction }}
+                </div>
+                {% endif %}
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h6>
+                            <i class="fas fa-leaf me-2"></i>
+                            Recommended Actions for {{ result.prediction }}:
+                        </h6>
+                        <p class="mb-0">{{ result.treatment }}</p>
+                    </div>
+                </div>
+                
+                {% if result.prediction != 'Healthy' %}
+                <div class="mt-3">
+                    <div class="card bg-info">
+                        <div class="card-body py-2">
+                            <small>
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Important:</strong> Always consult with a local agricultural expert or extension officer for proper diagnosis and treatment recommendations specific to your region and growing conditions.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>
+                    <i class="fas fa-upload me-2"></i>
+                    Analyze Another Image
+                </h5>
+                <p class="text-muted">Upload a new okra leaf image for analysis</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>New Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>
+                    <i class="fas fa-flag me-2"></i>
+                    Feedback
+                </h5>
+                <p class="text-muted">Help us improve by reporting incorrect diagnoses</p>
+                
+                {% if result.confidence < 0.7 %}
+                <div class="alert alert-warning py-2 mb-2">
+                    <small><i class="fas fa-exclamation-triangle me-1"></i>Low confidence result</small>
+                </div>
+                {% endif %}
+                
+                <form method="POST" action="{{ url_for('flag_prediction') }}" style="display: inline;"
+                      onsubmit="return confirm('Are you sure this diagnosis is incorrect?');">
+                    <input type="hidden" name="filename" value="{{ filename }}">
+                    <input type="hidden" name="prediction" value="{{ result.prediction }}">
+                    <button type="submit" class="btn btn-outline-warning">
+                        <i class="fas fa-flag me-2"></i>
+                        Report Incorrect
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Technical Details (for debugging) -->
+{% if session.role == 'admin' %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-code me-2"></i>
+                    Technical Details (Admin Only)
+                </h6>
+            </div>
+            <div class="card-body">
+                <pre class="small"><code>{{ result | tojson(indent=2) }}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-hide alerts after 5 seconds
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        if (alert.classList.contains('alert-success') || alert.classList.contains('alert-info')) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }
+    });
+}, 5000);
+</script>
+{% endblock %}

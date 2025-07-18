@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Login - OkroHealthDetector{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-leaf text-success me-2"></i>
+                    OkroHealthDetector
+                </h3>
+                <p class="text-muted mb-0">AI Disease Detection System</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Login
+                    </button>
+                </form>
+            </div>
+            <div class="card-footer">
+                <div class="row text-center">
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">Demo Accounts:</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-primary">
+                            <div class="card-body py-2">
+                                <small><strong>Admin</strong></small><br>
+                                <small>admin / admin123</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-secondary">
+                            <div class="card-body py-2">
+                                <small><strong>User</strong></small><br>
+                                <small>user / user123</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Features -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    System Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <i class="fas fa-brain text-primary me-2"></i>
+                        <small>AI Detection</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <i class="fas fa-shield-alt text-success me-2"></i>
+                        <small>Offline Mode</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <i class="fas fa-users text-info me-2"></i>
+                        <small>Role-Based Access</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <i class="fas fa-chart-line text-warning me-2"></i>
+                        <small>Continuous Learning</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
