@@ -136,7 +136,7 @@
                         <small class="text-muted">Demo Accounts (for testing):</small>
                     </div>
                     <div class="col-6">
-                        <div class="card bg-primary">
+                        <div class="card bg-primary demo-card" style="cursor: pointer;" data-username="admin" data-password="admin123">
                             <div class="card-body py-2">
                                 <small><strong>Admin</strong></small><br>
                                 <small>admin / admin123</small>
@@ -144,10 +144,10 @@
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="card bg-secondary">
+                        <div class="card bg-secondary demo-card" style="cursor: pointer;" data-username="demo_user" data-password="user123">
                             <div class="card-body py-2">
                                 <small><strong>User</strong></small><br>
-                                <small>user / user123</small>
+                                <small>demo_user / user123</small>
                             </div>
                         </div>
                     </div>
@@ -392,20 +392,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add click handlers for demo account cards
     document.addEventListener('click', function(e) {
-        const demoCard = e.target.closest('.card.bg-primary, .card.bg-secondary');
+        const demoCard = e.target.closest('.demo-card');
         if (demoCard) {
-            const isAdmin = demoCard.classList.contains('bg-primary');
-            const username = isAdmin ? 'admin' : 'user';
-            const password = isAdmin ? 'admin123' : 'user123';
+            const username = demoCard.getAttribute('data-username');
+            const password = demoCard.getAttribute('data-password');
             
             // Check which tab is active
             const activeTab = document.querySelector('#authTabs .nav-link.active');
             const isLoginTab = activeTab && activeTab.id === 'login-tab';
             
-            fillDemoAccount(username, password, isLoginTab);
-            
-            // Show tooltip or flash message
-            showAlert(`Filled ${username} credentials for ${isLoginTab ? 'login' : 'registration'}`, 'info');
+            if (isLoginTab) {
+                document.getElementById('login_username').value = username;
+                document.getElementById('login_password').value = password;
+                showAlert(`Filled ${username} credentials for login`, 'info');
+            } else {
+                // For registration, fill the fields differently
+                document.getElementById('reg_username').value = username + '_new';
+                document.getElementById('reg_email').value = username + '_new@example.com';
+                document.getElementById('reg_password').value = password;
+                document.getElementById('reg_confirm_password').value = password;
+                showAlert(`Filled demo credentials for registration (modified username to avoid conflicts)`, 'info');
+            }
         }
     });
 });
