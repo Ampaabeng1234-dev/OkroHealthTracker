@@ -117,15 +117,15 @@
                                     {% for log in logs[:50] %}
                                     <tr>
                                         <td>
-                                            <small>{{ log.timestamp[:19] }}</small>
+                                            <small>{{ log.created_at[:19] if log.created_at else 'Unknown' }}</small>
                                         </td>
                                         <td>
                                             <span class="badge bg-{{ 'primary' if log.username == 'admin' else 'secondary' }}">
-                                                {{ log.username }}
+                                                {{ log.username or 'Unknown' }}
                                             </span>
                                         </td>
                                         <td>
-                                            <small>{{ log.filename[:20] }}{% if log.filename|length > 20 %}...{% endif %}</small>
+                                            <small>{{ log.filename[:20] if log.filename else 'N/A' }}{% if log.filename and log.filename|length > 20 %}...{% endif %}</small>
                                         </td>
                                         <td>
                                             <span class="badge bg-{{ 'success' if log.prediction == 'Healthy' else 'warning' }}">
@@ -150,7 +150,7 @@
                                             </small>
                                         </td>
                                         <td>
-                                            {% if log.feedback == 'flagged' %}
+                                            {% if log.has_feedback %}
                                             <span class="badge bg-danger">
                                                 <i class="fas fa-flag me-1"></i>Flagged
                                             </span>

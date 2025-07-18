@@ -10,6 +10,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import model_definitions
 UNetModel = model_definitions.UNetModel
 create_dummy_model = model_definitions.create_dummy_model
+create_trained_model = model_definitions.create_trained_model
+validate_okra_leaf_image = model_definitions.validate_okra_leaf_image
+preprocess_image_for_model = model_definitions.preprocess_image_for_model
 
 # Import fallback rule engine
 from models.fallback_rule_engine import FallbackRuleEngine
@@ -26,7 +29,7 @@ class DiseasePredictor:
         self.load_model()
     
     def load_model(self):
-        """Load the UNet model from file or create dummy model"""
+        """Load the UNet model from file or create trained model"""
         model_path = 'models/unet_model.pth'
         
         try:
@@ -38,31 +41,61 @@ class DiseasePredictor:
                 self.model.eval()
                 logging.info("Loaded trained UNet model")
             else:
-                # Create dummy model for demonstration
-                self.model = create_dummy_model()
+                # Create trained model (better than dummy)
+                self.model = create_trained_model()
+                if self.model is None:
+                    self.model = create_dummy_model()
+                    logging.warning("Using basic dummy model")
+                else:
+                    logging.info("Created locally trained UNet model")
                 self.model.to(self.device)
-                logging.warning("Using dummy model - no trained model found")
                 
         except Exception as e:
             logging.error(f"Error loading model: {str(e)}")
             # Fallback to dummy model
             self.model = create_dummy_model()
-            self.model.to(self.device)
+            if self.model:
+                self.model.to(self.device)
+            else:
+                logging.critical("Failed to create any model - system may not function properly")
     
     def predict(self, processed_image, image_path):
         """
-        Predict disease from preprocessed image
+        Predict disease from preprocessed image with enhanced validation
         
         Args:
-            processed_image (numpy.ndarray): Preprocessed image
+            processed_image (numpy.ndarray): Preprocessed image (legacy)
             image_path (str): Path to original image
         
         Returns:
             dict: Prediction results
         """
         try:
-            # Primary prediction using deep learning
-            dl_result = self.deep_learning_prediction(processed_image)
+            # First validate that the image contains an okra leaf
+            is_valid, validation_confidence, validation_reason = validate_okra_leaf_image(image_path)
+            
+            if not is_valid:
+                return {
+                    'prediction': 'Invalid Input',
+                    'confidence': 0.0,
+                    'method': 'validation_rejected',
+                    'error': f"Image validation failed: {validation_reason}",
+                    'validation_confidence': validation_confidence
+                }
+            
+            # Preprocess image with enhanced preprocessing
+            model_input, preprocessing_error = preprocess_image_for_model(image_path)
+            
+            if model_input is None:
+                return {
+                    'prediction': 'Processing Error',
+                    'confidence': 0.0,
+                    'method': 'preprocessing_failed',
+                    'error': preprocessing_error
+                }
+            
+            # Primary prediction using deep learning with new input format
+            dl_result = self.deep_learning_prediction_enhanced(model_input)
             
             # Check confidence threshold
             if dl_result['confidence'] >= self.confidence_threshold:
@@ -70,7 +103,8 @@ class DiseasePredictor:
                     'prediction': dl_result['prediction'],
                     'confidence': dl_result['confidence'],
                     'method': 'deep_learning',
-                    'all_probabilities': dl_result['all_probabilities']
+                    'all_probabilities': dl_result['all_probabilities'],
+                    'validation_confidence': validation_confidence
                 }
             else:
                 # Use fallback rule-based system
@@ -85,7 +119,8 @@ class DiseasePredictor:
                     'method': 'hybrid',
                     'dl_confidence': dl_result['confidence'],
                     'rule_confidence': fallback_result['confidence'],
-                    'all_probabilities': dl_result['all_probabilities']
+                    'all_probabilities': dl_result['all_probabilities'],
+                    'validation_confidence': validation_confidence
                 }
                 
         except Exception as e:
@@ -98,35 +133,66 @@ class DiseasePredictor:
                 'error': str(e)
             }
     
-    def deep_learning_prediction(self, processed_image):
-        """Perform deep learning prediction"""
-        
-        # Convert to tensor
-        image_tensor = torch.from_numpy(processed_image).permute(2, 0, 1).unsqueeze(0)
-        image_tensor = image_tensor.to(self.device)
-        
-        with torch.no_grad():
-            # Get model output
-            outputs = self.model(image_tensor)
-            probabilities = torch.nn.functional.softmax(outputs, dim=1)
+    def deep_learning_prediction_enhanced(self, model_input_tensor):
+        """Perform deep learning prediction with enhanced input handling"""
+        try:
+            # Ensure tensor is on correct device and has correct dtype
+            input_tensor = model_input_tensor.to(self.device).float()
             
-            # Get prediction
-            confidence, predicted_idx = torch.max(probabilities, 1)
-            
-            # Convert to numpy
-            confidence = confidence.item()
-            predicted_idx = predicted_idx.item()
-            all_probs = probabilities.squeeze().cpu().numpy()
-            
-            prediction = self.class_names[predicted_idx]
-            
-            return {
-                'prediction': prediction,
-                'confidence': confidence,
-                'all_probabilities': {
-                    class_name: float(prob) 
-                    for class_name, prob in zip(self.class_names, all_probs)
+            if self.model is None:
+                logging.error("Model is not loaded")
+                return {
+                    'prediction': 'Unknown',
+                    'confidence': 0.0,
+                    'all_probabilities': {name: 0.0 for name in self.class_names}
                 }
+            
+            with torch.no_grad():
+                # Get model output
+                outputs = self.model(input_tensor)
+                probabilities = torch.nn.functional.softmax(outputs, dim=1)
+                
+                # Get prediction
+                confidence, predicted_idx = torch.max(probabilities, 1)
+                
+                # Convert to numpy
+                confidence = confidence.item()
+                predicted_idx = predicted_idx.item()
+                all_probs = probabilities.squeeze().cpu().numpy()
+                
+                prediction = self.class_names[predicted_idx]
+                
+                return {
+                    'prediction': prediction,
+                    'confidence': confidence,
+                    'all_probabilities': {
+                        class_name: float(prob) 
+                        for class_name, prob in zip(self.class_names, all_probs)
+                    }
+                }
+        except Exception as e:
+            logging.error(f"Error in enhanced deep learning prediction: {str(e)}")
+            return {
+                'prediction': 'Unknown',
+                'confidence': 0.0,
+                'all_probabilities': {name: 0.0 for name in self.class_names}
+            }
+    
+    def deep_learning_prediction(self, processed_image):
+        """Legacy deep learning prediction method for backward compatibility"""
+        try:
+            # Convert to tensor
+            image_tensor = torch.from_numpy(processed_image).permute(2, 0, 1).unsqueeze(0)
+            image_tensor = image_tensor.to(self.device).float()
+            
+            return self.deep_learning_prediction_enhanced(image_tensor)
+            
+        except Exception as e:
+            logging.error(f"Error in legacy deep learning prediction: {str(e)}")
+            return {
+                'prediction': 'Unknown',
+                'confidence': 0.0,
+                'all_probabilities': {name: 0.0 for name in self.class_names}
             }
     
     def combine_predictions(self, dl_result, rule_result):
