@@ -15,7 +15,7 @@ from utils.chatbot import chatbot_service
 import cv2
 import numpy as np
 from PIL import Image
-from database_models import db, User, Prediction, UserFeedback, SystemLog, DiseaseClass, UserProfile, ChatbotConfig, ChatConversation, ChatMessage
+from database_models import db, User, Prediction, UserFeedback, SystemLog, DiseaseClass, UserProfile, ChatbotConfig, ChatConversation, ChatMessage, TrainingData, ModelTraining
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -954,6 +954,176 @@ def delete_chatbot(chatbot_id):
         flash('Error deleting chatbot.', 'error')
     
     return redirect(url_for('admin_chatbot'))
+
+# ============ Model Training Routes ============
+
+@app.route('/admin/training')
+@admin_required
+def admin_training():
+    """Admin model training management page"""
+    training_sessions = ModelTraining.query.order_by(ModelTraining.created_at.desc()).all()
+    training_data = TrainingData.query.order_by(TrainingData.upload_date.desc()).limit(50).all()
+    
+    # Get statistics
+    total_images = TrainingData.query.count()
+    validated_images = TrainingData.query.filter_by(is_validated=True).count()
+    class_counts = {}
+    disease_classes = ['Healthy', 'Bacterial_Blight', 'Leaf_Spot', 'Mosaic_Virus', 'Powdery_Mildew']
+    
+    for disease_class in disease_classes:
+        class_counts[disease_class] = TrainingData.query.filter_by(disease_class=disease_class).count()
+    
+    return render_template('admin_training.html',
+                         training_sessions=training_sessions,
+                         training_data=training_data,
+                         total_images=total_images,
+                         validated_images=validated_images,
+                         class_counts=class_counts)
+
+@app.route('/admin/training/upload', methods=['GET', 'POST'])
+@admin_required
+def upload_training_data():
+    """Upload training images"""
+    if request.method == 'POST':
+        try:
+            disease_class = request.form.get('disease_class')
+            if not disease_class:
+                flash('Please select a disease class.', 'error')
+                return redirect(request.url)
+            
+            files = request.files.getlist('training_images')
+            if not files or files[0].filename == '':
+                flash('Please select images to upload.', 'error')
+                return redirect(request.url)
+            
+            uploaded_count = 0
+            failed_count = 0
+            
+            # Create training data directory if it doesn't exist
+            training_dir = os.path.join('static', 'training_data', disease_class)
+            os.makedirs(training_dir, exist_ok=True)
+            
+            for file in files:
+                if file and allowed_file(file.filename):
+                    try:
+                        # Generate unique filename
+                        filename = f"{disease_class}_{int(time.time())}_{secure_filename(file.filename)}"
+                        file_path = os.path.join(training_dir, filename)
+                        
+                        # Save file
+                        file.save(file_path)
+                        
+                        # Get image dimensions
+                        with Image.open(file_path) as img:
+                            width, height = img.size
+                        
+                        # Create training data record
+                        training_data = TrainingData(
+                            filename=filename,
+                            original_filename=file.filename,
+                            disease_class=disease_class,
+                            file_path=file_path,
+                            file_size=os.path.getsize(file_path),
+                            image_width=width,
+                            image_height=height,
+                            uploaded_by=session['user_id']
+                        )
+                        
+                        db.session.add(training_data)
+                        uploaded_count += 1
+                        
+                    except Exception as e:
+                        logging.error(f"Error uploading file {file.filename}: {str(e)}")
+                        failed_count += 1
+                else:
+                    failed_count += 1
+            
+            db.session.commit()
+            
+            if uploaded_count > 0:
+                flash(f'Successfully uploaded {uploaded_count} training images.', 'success')
+            if failed_count > 0:
+                flash(f'{failed_count} files failed to upload.', 'warning')
+            
+            return redirect(url_for('admin_training'))
+            
+        except Exception as e:
+            logging.error(f"Error in training data upload: {str(e)}")
+            db.session.rollback()
+            flash('Error uploading training data. Please try again.', 'error')
+    
+    disease_classes = ['Healthy', 'Bacterial_Blight', 'Leaf_Spot', 'Mosaic_Virus', 'Powdery_Mildew']
+    return render_template('upload_training.html', disease_classes=disease_classes)
+
+@app.route('/admin/training/start', methods=['POST'])
+@admin_required
+def start_training():
+    """Start model training"""
+    try:
+        training_name = request.form.get('training_name')
+        epochs = int(request.form.get('epochs', 10))
+        
+        if not training_name:
+            flash('Please provide a training name.', 'error')
+            return redirect(url_for('admin_training'))
+        
+        # Check if we have enough training data
+        total_images = TrainingData.query.filter_by(is_validated=True).count()
+        if total_images < 10:
+            flash('Need at least 10 validated training images to start training.', 'warning')
+            return redirect(url_for('admin_training'))
+        
+        # Create training session
+        model_version = f"v{int(time.time())}"
+        training_session = ModelTraining(
+            training_name=training_name,
+            model_version=model_version,
+            training_status='pending',
+            total_epochs=epochs,
+            total_images=total_images,
+            created_by=session['user_id']
+        )
+        
+        db.session.add(training_session)
+        db.session.commit()
+        
+        # Start training in background (simplified for demo)
+        flash('Training session created. Training will start shortly.', 'info')
+        
+        return redirect(url_for('admin_training'))
+        
+    except Exception as e:
+        logging.error(f"Error starting training: {str(e)}")
+        db.session.rollback()
+        flash('Error starting training. Please try again.', 'error')
+        return redirect(url_for('admin_training'))
+
+@app.route('/admin/training/validate/<int:data_id>', methods=['POST'])
+@admin_required
+def validate_training_data(data_id):
+    """Validate or reject training data"""
+    try:
+        training_data = TrainingData.query.get_or_404(data_id)
+        action = request.form.get('action')
+        notes = request.form.get('notes', '')
+        
+        if action == 'validate':
+            training_data.is_validated = True
+            training_data.validation_notes = notes
+            flash('Training data validated.', 'success')
+        elif action == 'reject':
+            training_data.is_validated = False
+            training_data.validation_notes = notes
+            flash('Training data rejected.', 'info')
+        
+        db.session.commit()
+        
+    except Exception as e:
+        logging.error(f"Error validating training data: {str(e)}")
+        db.session.rollback()
+        flash('Error updating validation status.', 'error')
+    
+    return redirect(url_for('admin_training'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -338,3 +338,88 @@ class ChatMessage(db.Model):
     
     def __repr__(self):
         return f'<ChatMessage {self.id}: {self.message_type}>'
+
+class TrainingData(db.Model):
+    """Model for storing training images and data"""
+    __tablename__ = 'training_data'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    disease_class = db.Column(db.String(100), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer)
+    image_width = db.Column(db.Integer)
+    image_height = db.Column(db.Integer)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    is_validated = db.Column(db.Boolean, default=False)
+    validation_notes = db.Column(db.Text)
+    
+    # Relationship
+    uploader = db.relationship('User', backref='training_uploads')
+    
+    def to_dict(self):
+        """Convert training data to dictionary"""
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'original_filename': self.original_filename,
+            'disease_class': self.disease_class,
+            'file_size': self.file_size,
+            'image_width': self.image_width,
+            'image_height': self.image_height,
+            'uploaded_by': self.uploaded_by,
+            'uploader_name': self.uploader.username if self.uploader else None,
+            'upload_date': self.upload_date.isoformat() if self.upload_date else None,
+            'is_validated': self.is_validated,
+            'validation_notes': self.validation_notes
+        }
+    
+    def __repr__(self):
+        return f'<TrainingData {self.id}: {self.disease_class}>'
+
+class ModelTraining(db.Model):
+    """Model for storing model training sessions"""
+    __tablename__ = 'model_training'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    training_name = db.Column(db.String(200), nullable=False)
+    model_version = db.Column(db.String(100), nullable=False)
+    training_status = db.Column(db.String(50), default='pending')
+    training_start = db.Column(db.DateTime)
+    training_end = db.Column(db.DateTime)
+    total_images = db.Column(db.Integer, default=0)
+    training_accuracy = db.Column(db.Float)
+    validation_accuracy = db.Column(db.Float)
+    epochs_completed = db.Column(db.Integer, default=0)
+    total_epochs = db.Column(db.Integer, default=10)
+    model_file_path = db.Column(db.String(500))
+    training_log = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    trainer = db.relationship('User', backref='model_trainings')
+    
+    def to_dict(self):
+        """Convert model training to dictionary"""
+        return {
+            'id': self.id,
+            'training_name': self.training_name,
+            'model_version': self.model_version,
+            'training_status': self.training_status,
+            'training_start': self.training_start.isoformat() if self.training_start else None,
+            'training_end': self.training_end.isoformat() if self.training_end else None,
+            'total_images': self.total_images,
+            'training_accuracy': self.training_accuracy,
+            'validation_accuracy': self.validation_accuracy,
+            'epochs_completed': self.epochs_completed,
+            'total_epochs': self.total_epochs,
+            'created_by': self.created_by,
+            'trainer_name': self.trainer.username if self.trainer else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def __repr__(self):
+        return f'<ModelTraining {self.id}: {self.training_name}>'

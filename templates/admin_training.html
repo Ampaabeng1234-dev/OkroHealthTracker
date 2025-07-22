@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Model Training - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Header -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="card-title mb-2">
+                            <i class="fas fa-brain me-2"></i>Model Training
+                        </h1>
+                        <p class="card-text">Upload training data and manage UNet model training</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('upload_training_data') }}" class="btn btn-success me-2">
+                            <i class="fas fa-upload me-2"></i>Upload Training Data
+                        </a>
+                        <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Admin
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-images fa-3x mb-2"></i>
+                <h3>{{ total_images }}</h3>
+                <p class="mb-0">Total Images</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success">
+            <div class="card-body text-center">
+                <i class="fas fa-check fa-3x mb-2"></i>
+                <h3>{{ validated_images }}</h3>
+                <p class="mb-0">Validated Images</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-3x mb-2"></i>
+                <h3>{{ total_images - validated_images }}</h3>
+                <p class="mb-0">Pending Validation</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info">
+            <div class="card-body text-center">
+                <i class="fas fa-cog fa-3x mb-2"></i>
+                <h3>{{ training_sessions|length }}</h3>
+                <p class="mb-0">Training Sessions</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Class Distribution -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Training Data Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for disease_class, count in class_counts.items() %}
+                    <div class="col-md-2">
+                        <div class="text-center p-3">
+                            <h4 class="mb-1">{{ count }}</h4>
+                            <small class="text-muted">{{ disease_class.replace('_', ' ') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Training Form -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Start New Training</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('start_training') }}">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="training_name" class="form-label">Training Name</label>
+                            <input type="text" class="form-control" id="training_name" name="training_name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="epochs" class="form-label">Epochs</label>
+                            <input type="number" class="form-control" id="epochs" name="epochs" value="10" min="1" max="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-success w-100" {% if validated_images < 10 %}disabled{% endif %}>
+                                <i class="fas fa-play me-2"></i>Start Training
+                            </button>
+                        </div>
+                    </div>
+                    {% if validated_images < 10 %}
+                    <small class="text-warning">Need at least 10 validated images to start training</small>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Training Sessions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Training Sessions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Version</th>
+                                <th>Status</th>
+                                <th>Images</th>
+                                <th>Epochs</th>
+                                <th>Accuracy</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in training_sessions %}
+                            <tr>
+                                <td>{{ session.training_name }}</td>
+                                <td><code>{{ session.model_version }}</code></td>
+                                <td>
+                                    {% if session.training_status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif session.training_status == 'training' %}
+                                        <span class="badge bg-warning">Training</span>
+                                    {% elif session.training_status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.total_images }}</td>
+                                <td>{{ session.epochs_completed or 0 }}/{{ session.total_epochs }}</td>
+                                <td>
+                                    {% if session.validation_accuracy %}
+                                        {{ "%.2f"|format(session.validation_accuracy * 100) }}%
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.created_at.strftime('%Y-%m-%d %H:%M') if session.created_at else '' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No training sessions yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Training Data -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Training Data</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Disease Class</th>
+                                <th>Filename</th>
+                                <th>Size</th>
+                                <th>Dimensions</th>
+                                <th>Status</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in training_data %}
+                            <tr>
+                                <td>
+                                    <img src="{{ url_for('static', filename=data.file_path.replace('static/', '')) }}" 
+                                         class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ data.disease_class.replace('_', ' ') }}</span>
+                                </td>
+                                <td><small>{{ data.original_filename }}</small></td>
+                                <td><small>{{ "%.1f"|format(data.file_size / 1024) }} KB</small></td>
+                                <td><small>{{ data.image_width }}×{{ data.image_height }}</small></td>
+                                <td>
+                                    {% if data.is_validated %}
+                                        <span class="badge bg-success">Validated</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ data.upload_date.strftime('%Y-%m-%d') if data.upload_date else '' }}</small></td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <form method="POST" action="{{ url_for('validate_training_data', data_id=data.id) }}" style="display: inline;">
+                                            <input type="hidden" name="action" value="validate">
+                                            <button type="submit" class="btn btn-sm btn-success" {% if data.is_validated %}disabled{% endif %}>
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('validate_training_data', data_id=data.id) }}" style="display: inline;">
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">No training data uploaded yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

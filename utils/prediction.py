@@ -31,9 +31,14 @@ class DiseasePredictor:
     
     def load_model(self):
         """Load the UNet model from file or create trained model"""
-        model_path = 'models/unet_model.pth'
-        
         try:
+            # Try to load custom trained model (skip for now due to circular imports)
+            self.custom_validator = None
+            self.has_custom_model = False
+            
+            # Standard model loading
+            model_path = 'models/unet_model.pth'
+            
             if os.path.exists(model_path):
                 # Load trained model
                 self.model = UNetModel(n_channels=3, n_classes=5)

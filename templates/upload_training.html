@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Training Data - Model Training{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Header -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="card-title mb-2">
+                            <i class="fas fa-upload me-2"></i>Upload Training Data
+                        </h1>
+                        <p class="card-text">Upload images to train the UNet disease detection model</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('admin_training') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Training
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Instructions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Training Data Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Image Requirements:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>High quality okra leaf images</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Clear, well-lit photos</li>
+                            <li><i class="fas fa-check text-success me-2"></i>JPG, PNG, or JPEG format</li>
+                            <li><i class="fas fa-check text-success me-2"></i>At least 224x224 pixels</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Maximum 10MB per file</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Best Practices:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Upload at least 20 images per disease class</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Include different lighting conditions</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Show various disease stages</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Avoid blurry or damaged images</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Validate images before training</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Form -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Upload Training Images</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="disease_class" class="form-label">Disease Class *</label>
+                            <select class="form-select" id="disease_class" name="disease_class" required>
+                                <option value="">Select Disease Class</option>
+                                {% for disease_class in disease_classes %}
+                                <option value="{{ disease_class }}">{{ disease_class.replace('_', ' ') }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="training_images" class="form-label">Training Images *</label>
+                            <input type="file" class="form-control" id="training_images" name="training_images" 
+                                   multiple accept="image/*" required>
+                            <div class="form-text">Select multiple images (Ctrl+Click or Cmd+Click)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div id="imagePreview" class="border rounded p-3" style="min-height: 100px; display: none;">
+                                <h6>Selected Images:</h6>
+                                <div id="previewContainer" class="row"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success me-2" id="uploadBtn">
+                                <i class="fas fa-upload me-2"></i>Upload Training Data
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" id="clearBtn">
+                                <i class="fas fa-times me-2"></i>Clear Selection
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disease Class Information -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Disease Classes Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-success">Healthy</h6>
+                                <p class="card-text">Upload images of healthy okra leaves with no visible disease symptoms.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-danger">Bacterial Blight</h6>
+                                <p class="card-text">Images showing angular water-soaked lesions, yellow halos, and leaf wilting.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-warning">Leaf Spot</h6>
+                                <p class="card-text">Circular to oval brown spots with yellow margins on leaves.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-info">Mosaic Virus</h6>
+                                <p class="card-text">Mottled yellow and green patterns, leaf curling and stunting.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title text-secondary">Powdery Mildew</h6>
+                                <p class="card-text">White powdery coating on leaf surfaces and stems.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('training_images').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('previewContainer');
+    
+    if (files.length > 0) {
+        preview.style.display = 'block';
+        container.innerHTML = '';
+        
+        Array.from(files).slice(0, 12).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                const div = document.createElement('div');
+                div.className = 'col-md-2 mb-2';
+                
+                const img = document.createElement('img');
+                img.className = 'img-thumbnail';
+                img.style.height = '80px';
+                img.style.objectFit = 'cover';
+                img.src = URL.createObjectURL(file);
+                
+                const caption = document.createElement('small');
+                caption.className = 'text-muted d-block text-center';
+                caption.textContent = file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name;
+                
+                div.appendChild(img);
+                div.appendChild(caption);
+                container.appendChild(div);
+            }
+        });
+        
+        if (files.length > 12) {
+            const div = document.createElement('div');
+            div.className = 'col-md-2 mb-2';
+            div.innerHTML = `<div class="d-flex align-items-center justify-content-center" style="height: 80px; background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 0.375rem;">
+                <small class="text-muted">+${files.length - 12} more</small>
+            </div>`;
+            container.appendChild(div);
+        }
+    } else {
+        preview.style.display = 'none';
+    }
+});
+
+document.getElementById('clearBtn').addEventListener('click', function() {
+    document.getElementById('training_images').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('previewContainer').innerHTML = '';
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function() {
+    const btn = document.getElementById('uploadBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}
