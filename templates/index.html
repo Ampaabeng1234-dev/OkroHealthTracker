@@ -18,10 +18,16 @@
                 <p class="text-muted">
                     Upload an image or take a photo of an okra leaf to get instant disease analysis and treatment recommendations
                 </p>
-                <div class="d-block d-md-none">
+                <div class="d-block d-md-none" id="mobileInfo">
                     <small class="text-info">
                         <i class="fas fa-mobile-alt me-1"></i>
                         Mobile device detected - Camera capture available
+                    </small>
+                </div>
+                <div class="d-none" id="cameraNotSupported">
+                    <small class="text-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Camera not available - Please upload a photo instead
                     </small>
                 </div>
             </div>

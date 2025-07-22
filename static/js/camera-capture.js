@@ -118,10 +118,13 @@ class CameraCapture {
     addCameraButton() {
         // Find file input and add camera button next to it
         const fileInput = document.querySelector('input[type="file"][name="file"]');
-        if (fileInput && fileInput.parentElement) {
-            const container = fileInput.parentElement;
-            
-            // Create camera button
+        if (!fileInput || !fileInput.parentElement) return;
+        
+        const container = fileInput.parentElement;
+        
+        // Check camera support
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            // Camera is supported - create button
             const cameraBtn = document.createElement('button');
             cameraBtn.type = 'button';
             cameraBtn.className = 'btn btn-success ms-2';
@@ -140,6 +143,15 @@ class CameraCapture {
             if (this.isMobile) {
                 container.classList.add('d-flex', 'flex-column', 'gap-2');
                 fileInput.classList.add('mb-0');
+            }
+        } else {
+            // Camera not supported - update UI messages
+            if (this.isMobile) {
+                const mobileInfo = document.getElementById('mobileInfo');
+                const cameraWarning = document.getElementById('cameraNotSupported');
+                
+                if (mobileInfo) mobileInfo.classList.add('d-none');
+                if (cameraWarning) cameraWarning.classList.remove('d-none');
             }
         }
     }
@@ -192,16 +204,41 @@ class CameraCapture {
     }
     
     async openCamera() {
-        // Show loading
-        this.showLoading(true);
-        
-        // Check camera support
+        // Check camera support first
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             this.showError('Camera not supported on this device');
             return;
         }
         
-        // Open modal
+        // Quick permission test
+        try {
+            this.showLoading(true, 'Requesting camera permission...');
+            
+            // Test camera access briefly
+            const testStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Stop test stream immediately
+            testStream.getTracks().forEach(track => track.stop());
+            
+            // Show success feedback
+            this.showLoading(false);
+            
+        } catch (error) {
+            this.showLoading(false);
+            
+            let message = 'Camera access failed. ';
+            if (error.name === 'NotAllowedError') {
+                message += 'Please click "Allow" when your browser asks for camera permission.';
+            } else if (error.name === 'NotFoundError') {
+                message += 'No camera found on this device.';
+            } else {
+                message += 'Please check your camera is working and not used by other apps.';
+            }
+            
+            this.showError(message);
+            return;
+        }
+        
+        // Open modal after permission granted
         this.modal.show();
     }
     
@@ -209,25 +246,56 @@ class CameraCapture {
         try {
             this.showLoading(true);
             
-            // Camera constraints
-            const constraints = {
-                video: {
-                    facingMode: this.isMobile ? 'environment' : 'user', // Back camera on mobile
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+            // Add timeout for camera initialization
+            const initCamera = async () => {
+                // Try with preferred constraints first
+                let constraints = {
+                    video: {
+                        facingMode: this.isMobile ? { ideal: 'environment' } : 'user',
+                        width: { ideal: 1280, max: 1920 },
+                        height: { ideal: 720, max: 1080 }
+                    }
+                };
+                
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (error) {
+                    console.warn('Failed with preferred constraints, trying basic:', error);
+                    // Fallback to basic video
+                    this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 }
+                
+                this.video.srcObject = this.stream;
+                
+                // Wait for video to load
+                return new Promise((resolve, reject) => {
+                    this.video.onloadedmetadata = () => {
+                        this.video.play()
+                            .then(resolve)
+                            .catch(reject);
+                    };
+                    this.video.onerror = reject;
+                });
             };
             
-            // Get camera stream
-            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-            this.video.srcObject = this.stream;
+            // Add 10 second timeout
+            await Promise.race([
+                initCamera(),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Camera initialization timeout')), 10000)
+                )
+            ]);
             
             // Show flip button on mobile if multiple cameras available
             if (this.isMobile) {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                if (videoDevices.length > 1) {
-                    document.getElementById('flipCameraBtn').classList.remove('d-none');
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    if (videoDevices.length > 1) {
+                        document.getElementById('flipCameraBtn').classList.remove('d-none');
+                    }
+                } catch (e) {
+                    console.warn('Could not enumerate devices:', e);
                 }
             }
             
@@ -236,7 +304,22 @@ class CameraCapture {
             
         } catch (error) {
             console.error('Error accessing camera:', error);
-            this.showError('Unable to access camera. Please check permissions.');
+            this.showLoading(false);
+            
+            let message = 'Unable to access camera. ';
+            if (error.name === 'NotAllowedError') {
+                message += 'Please allow camera permissions and try again.';
+            } else if (error.name === 'NotFoundError') {
+                message += 'No camera found on this device.';
+            } else if (error.name === 'NotReadableError') {
+                message += 'Camera is being used by another application.';
+            } else if (error.message === 'Camera initialization timeout') {
+                message += 'Camera took too long to load. Please try again.';
+            } else {
+                message += 'Please check your browser settings.';
+            }
+            
+            this.showError(message);
         }
     }
     
@@ -455,10 +538,16 @@ class CameraCapture {
         }
     }
     
-    showLoading(show) {
+    showLoading(show, message = 'Accessing camera...') {
         const loading = document.getElementById('cameraLoading');
         if (loading) {
             loading.classList.toggle('d-none', !show);
+            
+            // Update message if provided
+            const messageElement = loading.querySelector('p');
+            if (messageElement && show) {
+                messageElement.textContent = message;
+            }
         }
     }
     

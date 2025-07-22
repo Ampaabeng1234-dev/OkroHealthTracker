@@ -6,11 +6,16 @@ class MobileDetection {
     constructor() {
         this.isMobile = this.detectMobile();
         this.isTablet = this.detectTablet();
-        this.hasCamera = this.detectCamera();
         this.isIOS = this.detectIOS();
         this.isAndroid = this.detectAndroid();
+        this.hasCamera = false; // Will be set async
         
         this.init();
+        this.detectCamera().then(hasCamera => {
+            this.hasCamera = hasCamera;
+        }).catch(() => {
+            this.hasCamera = false;
+        });
     }
     
     detectMobile() {
