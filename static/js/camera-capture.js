@@ -227,7 +227,13 @@ class CameraCapture {
             
             let message = 'Camera access failed. ';
             if (error.name === 'NotAllowedError') {
-                message += 'Please click "Allow" when your browser asks for camera permission.';
+                // Show permissions guide instead of just an error
+                if (window.cameraPermissionsGuide) {
+                    window.cameraPermissionsGuide.show();
+                    return;
+                } else {
+                    message += 'Please click "Allow" when your browser asks for camera permission.';
+                }
             } else if (error.name === 'NotFoundError') {
                 message += 'No camera found on this device.';
             } else {
