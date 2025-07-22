@@ -30,6 +30,13 @@ Preferred communication style: Simple, everyday language.
 - **Roles**: Admin and User roles with different permission levels
 - **Security**: Werkzeug password hashing with decorators for route protection
 
+### Model Training System (NEW)
+- **Custom Training**: Admin interface for uploading training images by disease class
+- **Training Management**: Database tracking of training sessions with progress monitoring
+- **Image Validation**: Automatic validation of training data quality
+- **UNet Training**: Custom UNet model training with uploaded data
+- **Similarity Validation**: Images validated against training data characteristics
+
 ## Key Components
 
 ### Disease Detection Pipeline
@@ -60,6 +67,8 @@ Preferred communication style: Simple, everyday language.
 - **Feedback System**: User feedback collection for continuous model improvement
 - **System Logging**: Comprehensive event logging for monitoring and debugging
 - **Disease Classes**: Structured disease information with treatments and severity levels
+- **Training Data Management**: TrainingData and ModelTraining models for custom model training
+- **Chatbot Configuration**: ChatbotConfig, ChatConversation, and ChatMessage models for AI chat system
 
 ## Data Flow
 

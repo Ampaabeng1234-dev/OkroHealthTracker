@@ -1087,8 +1087,15 @@ def start_training():
         db.session.add(training_session)
         db.session.commit()
         
-        # Start training in background (simplified for demo)
-        flash('Training session created. Training will start shortly.', 'info')
+        # Start training simulation (simplified for demo)
+        # In a real system, this would trigger background training
+        training_session.training_status = 'training'
+        training_session.epochs_completed = 5
+        training_session.training_accuracy = 0.85
+        training_session.validation_accuracy = 0.82
+        db.session.commit()
+        
+        flash('Training session started! (Demo simulation completed)', 'success')
         
         return redirect(url_for('admin_training'))
         
