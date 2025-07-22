@@ -43,6 +43,13 @@ function initializeFileUpload() {
             // Show image preview
             showImagePreview(file);
             
+            // Check if this is from camera capture
+            const isCameraCapture = file.name && file.name.includes('okra_leaf_');
+            if (isCameraCapture) {
+                // Add camera capture indicator
+                addCameraCaptureIndicator();
+            }
+            
             // Auto-submit after preview (optional)
             if (document.getElementById('autoSubmit') && document.getElementById('autoSubmit').checked) {
                 setTimeout(() => {
@@ -326,11 +333,36 @@ function flagPrediction(filename, prediction) {
     }
 }
 
+function addCameraCaptureIndicator() {
+    // Add visual indicator that image was captured from camera
+    const preview = document.getElementById('imagePreview');
+    if (preview) {
+        const indicator = document.createElement('div');
+        indicator.className = 'camera-capture-indicator mt-2 text-center';
+        indicator.innerHTML = `
+            <span class="badge bg-success">
+                <i class="fas fa-camera me-1"></i>Camera Captured
+            </span>
+            <small class="d-block text-muted mt-1">
+                Photo taken with device camera
+            </small>
+        `;
+        
+        // Remove existing indicator
+        const existing = preview.querySelector('.camera-capture-indicator');
+        if (existing) existing.remove();
+        
+        // Add new indicator
+        preview.appendChild(indicator);
+    }
+}
+
 // Export functions for global use
 window.OkroHealthDetector = {
     showAlert,
     flagPrediction,
     validateForm,
     showImagePreview,
-    hideImagePreview
+    hideImagePreview,
+    addCameraCaptureIndicator
 };

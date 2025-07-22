@@ -1,0 +1,246 @@
+/* Mobile-responsive camera capture styles */
+
+/* Base mobile optimizations */
+@media (max-width: 768px) {
+    .camera-container video {
+        width: 100vw !important;
+        height: 70vh !important;
+        object-fit: cover !important;
+        border-radius: 0;
+    }
+    
+    .modal-fullscreen-md-down .modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-fullscreen-md-down .modal-body {
+        padding: 0;
+    }
+    
+    .camera-controls {
+        padding: 1rem !important;
+        background: linear-gradient(transparent, rgba(0,0,0,0.8)) !important;
+    }
+    
+    .camera-controls .btn {
+        border: 2px solid rgba(255,255,255,0.3);
+        backdrop-filter: blur(10px);
+    }
+    
+    .camera-controls .btn:hover {
+        background-color: rgba(255,255,255,0.1);
+        transform: scale(1.05);
+        transition: all 0.2s ease;
+    }
+    
+    /* Upload area mobile styles */
+    .upload-area {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .upload-area .btn {
+        border-radius: 0.375rem;
+        font-weight: 500;
+    }
+    
+    #openCameraBtn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Preview styles */
+    .camera-preview {
+        margin-top: 1rem;
+    }
+    
+    .camera-preview .card {
+        border: 2px solid #198754;
+        background: linear-gradient(135deg, #f8fff9, #ffffff);
+    }
+    
+    .camera-preview img {
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    }
+}
+
+/* Portrait orientation optimizations */
+@media (max-width: 768px) and (orientation: portrait) {
+    .camera-container video {
+        height: 60vh !important;
+    }
+    
+    .camera-controls {
+        bottom: 0;
+        background: linear-gradient(transparent 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.9) 100%) !important;
+    }
+    
+    #capturePreview canvas {
+        max-height: 50vh;
+    }
+}
+
+/* Landscape orientation optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    .camera-container video {
+        height: 80vh !important;
+    }
+    
+    .camera-controls {
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        background: rgba(0,0,0,0.7) !important;
+        border-radius: 2rem;
+        padding: 0.75rem 1.5rem !important;
+    }
+    
+    .camera-controls .d-flex {
+        gap: 1rem;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .camera-container video {
+        max-height: 60vh;
+        border-radius: 0.5rem;
+    }
+    
+    #openCameraBtn {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Accessibility improvements */
+.camera-controls .btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.5);
+    outline: none;
+}
+
+/* Loading states */
+.camera-loading-overlay {
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(5px);
+}
+
+/* Touch-friendly buttons */
+@media (pointer: coarse) {
+    .camera-controls .btn {
+        min-width: 50px;
+        min-height: 50px;
+        border-width: 2px;
+    }
+    
+    #captureBtn {
+        min-width: 70px;
+        min-height: 70px;
+        border-width: 3px;
+    }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .camera-preview img {
+        image-rendering: -webkit-optimize-contrast;
+    }
+}
+
+/* Dark mode camera interface */
+@media (prefers-color-scheme: dark) {
+    .camera-preview .card {
+        background: linear-gradient(135deg, #1a2f1a, #1a1a1a);
+        border-color: #28a745;
+    }
+    
+    .camera-controls .btn-outline-light:hover {
+        background-color: rgba(255,255,255,0.2);
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .camera-container video {
+        -webkit-playsinline: true;
+        object-position: center;
+    }
+    
+    .modal-fullscreen-md-down {
+        height: -webkit-fill-available;
+    }
+}
+
+/* Android specific fixes */
+@media (max-width: 768px) {
+    .camera-container {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .camera-container video::-webkit-media-controls {
+        display: none !important;
+    }
+    
+    .camera-container video::-webkit-media-controls-enclosure {
+        display: none !important;
+    }
+}
+
+/* Prevent zoom on double tap for camera buttons */
+.camera-controls .btn {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Smooth transitions */
+.camera-controls .btn,
+.upload-area .btn,
+.camera-preview {
+    transition: all 0.3s ease;
+}
+
+/* Success states */
+.camera-capture-success {
+    animation: cameraSuccess 0.5s ease-out;
+}
+
+@keyframes cameraSuccess {
+    0% {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Flash effect */
+.camera-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    opacity: 0.8;
+    z-index: 9999;
+    pointer-events: none;
+    animation: flashEffect 0.15s ease-out;
+}
+
+@keyframes flashEffect {
+    0% { opacity: 0; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0; }
+}

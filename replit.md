@@ -15,6 +15,8 @@ Preferred communication style: Simple, everyday language.
 - **Styling**: Dark theme with custom CSS and Font Awesome icons
 - **JavaScript**: Vanilla JS for file upload handling and UI interactions
 - **Template Engine**: Jinja2 templates extending from a base layout
+- **Mobile Features**: Camera capture API integration with device detection
+- **PWA Support**: Mobile-optimized meta tags and responsive design
 
 ### Backend Architecture
 - **Framework**: Flask web framework with Flask-SQLAlchemy ORM
@@ -36,6 +38,14 @@ Preferred communication style: Simple, everyday language.
 - **Image Validation**: Automatic validation of training data quality
 - **UNet Training**: Custom UNet model training with uploaded data
 - **Similarity Validation**: Images validated against training data characteristics
+
+### Mobile Camera System (NEW)
+- **Camera API**: Browser-based camera access with device detection
+- **Mobile Detection**: Automatic mobile device and capability detection
+- **Touch Optimization**: Touch-friendly UI with mobile-specific controls
+- **PWA Features**: Progressive Web App meta tags for native-like experience
+- **Responsive Camera**: Adaptive camera interface for portrait/landscape modes
+- **Image Capture**: Direct photo capture with preview and upload integration
 
 ## Key Components
 
