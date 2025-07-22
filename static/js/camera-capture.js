@@ -144,6 +144,19 @@ class CameraCapture {
                 container.classList.add('d-flex', 'flex-column', 'gap-2');
                 fileInput.classList.add('mb-0');
             }
+            
+            // Add alternative mobile file picker for camera
+            if (this.isMobile) {
+                const mobileCameraBtn = document.createElement('button');
+                mobileCameraBtn.type = 'button';
+                mobileCameraBtn.className = 'btn btn-outline-success';
+                mobileCameraBtn.innerHTML = '<i class="fas fa-images me-2"></i>From Gallery';
+                mobileCameraBtn.onclick = () => {
+                    // Trigger file input with camera capture
+                    fileInput.click();
+                };
+                container.appendChild(mobileCameraBtn);
+            }
         } else {
             // Camera not supported - update UI messages
             if (this.isMobile) {
@@ -227,17 +240,29 @@ class CameraCapture {
             
             let message = 'Camera access failed. ';
             if (error.name === 'NotAllowedError') {
+                // Track camera access attempts
+                this.cameraFailureCount = (this.cameraFailureCount || 0) + 1;
+                
                 // Show permissions guide instead of just an error
                 if (window.cameraPermissionsGuide) {
                     window.cameraPermissionsGuide.show();
+                    
+                    // After multiple failures, show fallback help
+                    if (this.cameraFailureCount >= 2) {
+                        setTimeout(() => {
+                            this.showFallbackHelp();
+                        }, 1000);
+                    }
                     return;
                 } else {
                     message += 'Please click "Allow" when your browser asks for camera permission.';
                 }
             } else if (error.name === 'NotFoundError') {
                 message += 'No camera found on this device.';
+                this.showFallbackHelp();
             } else {
                 message += 'Please check your camera is working and not used by other apps.';
+                this.showFallbackHelp();
             }
             
             this.showError(message);
@@ -596,6 +621,18 @@ class CameraCapture {
                 setTimeout(() => alertDiv.remove(), 150);
             }
         }, 4000);
+    }
+    
+    showFallbackHelp() {
+        const fallbackHelp = document.getElementById('cameraFallbackHelp');
+        if (fallbackHelp) {
+            fallbackHelp.classList.remove('d-none');
+            
+            // Auto hide after 10 seconds
+            setTimeout(() => {
+                fallbackHelp.classList.add('d-none');
+            }, 10000);
+        }
     }
 }
 

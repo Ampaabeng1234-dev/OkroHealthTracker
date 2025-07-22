@@ -54,6 +54,13 @@
                                    accept="image/png,image/jpeg,image/jpg,image/gif" required 
                                    capture="environment">
                             <!-- Camera button will be added here by JavaScript -->
+                            
+                            <!-- Fallback help for camera issues -->
+                            <div id="cameraFallbackHelp" class="alert alert-info mt-2 d-none">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Camera not working?</strong> 
+                                You can still take photos with your device's camera app and upload them using the "Choose File" button above.
+                            </div>
                         </div>
                         <div class="form-text d-flex justify-content-between align-items-center">
                             <div>

@@ -92,10 +92,24 @@ class CameraPermissionsGuide {
                                 </div>
                             </div>
                             
+                            <div class="alert alert-success mt-3">
+                                <i class="fas fa-mobile-alt me-2"></i>
+                                <strong>Alternative for Mobile Users:</strong><br>
+                                <small>
+                                    1. Take a photo with your device's camera app<br>
+                                    2. Come back here and click "Choose File"<br>
+                                    3. Select the photo from your gallery<br>
+                                    4. Upload for disease analysis
+                                </small>
+                            </div>
+                            
                             <div class="alert alert-warning mt-3">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Still having trouble?</strong><br>
-                                <small>You can still use the "Choose File" button to upload photos from your device's gallery.</small>
+                                <strong>Quick Camera Test:</strong><br>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="testCameraBtn">
+                                    <i class="fas fa-video me-1"></i>Test Camera Access
+                                </button>
+                                <small class="d-block mt-1">Click to verify your camera is working</small>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -130,6 +144,11 @@ class CameraPermissionsGuide {
         document.getElementById('cameraHelpBtn')?.addEventListener('click', () => {
             this.show();
         });
+        
+        // Camera test button
+        document.getElementById('testCameraBtn')?.addEventListener('click', () => {
+            this.testCamera();
+        });
     }
     
     show() {
@@ -138,6 +157,39 @@ class CameraPermissionsGuide {
     
     hide() {
         this.modal.hide();
+    }
+    
+    async testCamera() {
+        const testBtn = document.getElementById('testCameraBtn');
+        const originalText = testBtn.innerHTML;
+        
+        try {
+            testBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+            testBtn.disabled = true;
+            
+            // Quick test
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            stream.getTracks().forEach(track => track.stop());
+            
+            testBtn.innerHTML = '<i class="fas fa-check me-1"></i>Camera Works!';
+            testBtn.className = 'btn btn-sm btn-success';
+            
+            setTimeout(() => {
+                testBtn.innerHTML = originalText;
+                testBtn.className = 'btn btn-sm btn-outline-primary';
+                testBtn.disabled = false;
+            }, 2000);
+            
+        } catch (error) {
+            testBtn.innerHTML = '<i class="fas fa-times me-1"></i>Camera Failed';
+            testBtn.className = 'btn btn-sm btn-danger';
+            
+            setTimeout(() => {
+                testBtn.innerHTML = originalText;
+                testBtn.className = 'btn btn-sm btn-outline-primary';
+                testBtn.disabled = false;
+            }, 2000);
+        }
     }
 }
 
