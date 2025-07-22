@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Database Backup - Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-database me-2"></i>Database Backup</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Admin
+        </a>
+    </div>
+
+    <!-- Database Statistics Card -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar me-2"></i>Database Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for table_name, count in database_stats.items() %}
+                            {% if table_name not in ['total_records', 'generated_at'] %}
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <div class="text-center">
+                                    <h4 class="text-primary">{{ count }}</h4>
+                                    <small class="text-muted">{{ table_name.replace('_', ' ').title() }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h3 class="text-success">{{ database_stats.get('total_records', 0) }}</h3>
+                        <small class="text-muted">Total Records</small>
+                    </div>
+                    {% if database_stats.get('generated_at') %}
+                    <small class="text-muted">
+                        Statistics generated: {{ database_stats.get('generated_at')[:19] }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Backup Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-plus-circle me-2"></i>Create New Backup</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Create a complete backup of all database tables including users, predictions, feedback, and system logs.
+                        The backup will be saved as a JSON file that you can download.
+                    </p>
+                    <form method="post" action="{{ url_for('create_backup') }}" onsubmit="return confirm('Create database backup? This may take a few moments for large databases.');">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Create Backup
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Files List -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-history me-2"></i>Available Backups</h5>
+                </div>
+                <div class="card-body">
+                    {% if backup_files %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Created</th>
+                                    <th>Size</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in backup_files %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file-archive text-primary me-2"></i>
+                                        {{ backup.filename }}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ backup.created[:19].replace('T', ' ') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ backup.size_mb }} MB</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('download_backup', filename=backup.filename) }}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Download backup file">
+                                            <i class="fas fa-download me-1"></i>Download
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No backup files found. Create your first backup above.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Information -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6><i class="fas fa-info-circle me-2"></i>Backup Information</h6>
+                </div>
+                <div class="card-body">
+                    <h6>What's included in the backup:</h6>
+                    <ul class="mb-3">
+                        <li><strong>Users:</strong> All user accounts and profiles</li>
+                        <li><strong>Predictions:</strong> All disease detection results</li>
+                        <li><strong>Feedback:</strong> User feedback and ratings</li>
+                        <li><strong>System Logs:</strong> Application logs and events</li>
+                        <li><strong>Disease Classes:</strong> Disease information and treatments</li>
+                        <li><strong>Training Data:</strong> Custom training images and sessions</li>
+                        <li><strong>Chat Data:</strong> Chatbot configurations and conversations</li>
+                    </ul>
+                    
+                    <h6>Important Notes:</h6>
+                    <ul class="text-muted">
+                        <li>Backups are stored in JSON format for easy viewing and processing</li>
+                        <li>Uploaded images are not included in database backups</li>
+                        <li>Download backup files immediately after creation</li>
+                        <li>Store backup files in a secure location</li>
+                        <li>Regular backups help protect against data loss</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh statistics every 30 seconds
+setTimeout(() => {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

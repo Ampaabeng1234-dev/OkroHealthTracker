@@ -12,6 +12,7 @@ from utils.preprocessing import preprocess_image
 from utils.prediction import predict_disease
 from utils.access_control import login_required, admin_required
 from utils.chatbot import chatbot_service
+from utils.database_backup import DatabaseBackup
 import cv2
 import numpy as np
 from PIL import Image
@@ -1131,6 +1132,87 @@ def validate_training_data(data_id):
         flash('Error updating validation status.', 'error')
     
     return redirect(url_for('admin_training'))
+
+# Database Backup Routes
+@app.route('/admin/backup')
+@admin_required
+def admin_backup():
+    """Admin database backup management page"""
+    try:
+        backup_util = DatabaseBackup()
+        backup_files = backup_util.get_backup_files()
+        database_stats = backup_util.get_database_stats()
+        
+        return render_template('admin/backup.html', 
+                             backup_files=backup_files,
+                             database_stats=database_stats)
+    
+    except Exception as e:
+        logging.error(f"Error loading backup page: {str(e)}")
+        flash('Error loading backup page.', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/backup/create', methods=['POST'])
+@admin_required
+def create_backup():
+    """Create a new database backup"""
+    try:
+        backup_util = DatabaseBackup()
+        backup_info = backup_util.create_full_backup()
+        
+        # Log backup creation
+        log_entry = SystemLog(
+            user_id=session['user_id'],
+            event_type='backup_created',
+            event_data=json.dumps({
+                'filename': backup_info['filename'],
+                'total_records': backup_info['total_records'],
+                'file_size': backup_info['file_size']
+            }),
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        flash(f'Database backup created successfully! File: {backup_info["filename"]}', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error creating backup: {str(e)}")
+        flash('Error creating backup. Please try again.', 'error')
+    
+    return redirect(url_for('admin_backup'))
+
+@app.route('/admin/backup/download/<filename>')
+@admin_required
+def download_backup(filename):
+    """Download a backup file"""
+    try:
+        from flask import send_file
+        backup_util = DatabaseBackup()
+        filepath = os.path.join(backup_util.backup_dir, filename)
+        
+        if not os.path.exists(filepath) or not filename.endswith('.json'):
+            flash('Backup file not found.', 'error')
+            return redirect(url_for('admin_backup'))
+        
+        # Log download
+        log_entry = SystemLog(
+            user_id=session['user_id'],
+            event_type='backup_downloaded',
+            event_data=json.dumps({'filename': filename}),
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+        
+        return send_file(filepath, as_attachment=True, download_name=filename)
+        
+    except Exception as e:
+        logging.error(f"Error downloading backup: {str(e)}")
+        flash('Error downloading backup file.', 'error')
+        return redirect(url_for('admin_backup'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
