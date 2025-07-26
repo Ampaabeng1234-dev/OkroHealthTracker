@@ -1,0 +1,142 @@
+**📘 Replit Instructions for Developing the OkroHealthDetector Web Application System (Python-Based with Access Control)**
+
+---
+
+### 🔧 Overview:
+
+You are tasked with building **OkroHealthDetector**, a **Python-based web application** that classifies **okra leaf diseases** using a **hybrid diagnostic approach**. The system should implement **access-based control** with **Admin** and **User** roles. Admins can train the model and manage logs, while Users can upload images to get real-time disease predictions.
+
+---
+
+### ✅ Step-by-Step Replit Development Instructions
+
+#### 🧱 1. **Project Setup**
+
+* Create a **new Replit project** using the **Python (Flask or FastAPI)** template.
+* Install necessary dependencies:
+
+  ```bash
+  pip install flask opencv-python-headless numpy pillow scikit-learn joblib torch torchvision matplotlib
+  ```
+* Set up file structure:
+
+  ```
+  /okro_health_detector
+  ├── app.py
+  ├── templates/
+  │   ├── index.html
+  │   ├── admin.html
+  │   └── result.html
+  ├── static/
+  │   └── uploads/
+  ├── models/
+  │   ├── unet_model.pth
+  │   ├── fallback_rule_engine.py
+  ├── utils/
+  │   ├── preprocessing.py
+  │   ├── prediction.py
+  │   └── access_control.py
+  └── logs/
+      └── prediction_log.csv
+  ```
+
+---
+
+#### 🔐 2. **Implement Access-Based Control**
+
+* In `access_control.py`, define roles:
+
+  * Admin: Can upload training data, train the model, and view prediction logs.
+  * User: Can upload leaf images and view prediction results.
+* Create a login system (use Flask sessions or JWTs) with credentials for "admin" and "user".
+* Add a role-based navigation bar to `templates/base.html`.
+
+---
+
+#### 🧠 3. **Core Functionalities**
+
+##### 3.1 Image Upload and Preprocessing
+
+* Allow users to upload leaf images.
+* Apply real-time preprocessing:
+
+  * Resize, color normalization
+  * Edge enhancement using OpenCV
+
+##### 3.2 Deep Learning Prediction (Primary Layer)
+
+* Load `UNetModel` from `models/unet_model.pth`.
+* Predict disease with confidence score.
+* If confidence is high → show result.
+
+##### 3.3 Fallback Rule-Based System (Secondary Layer)
+
+* If confidence < threshold (e.g., 60%), run `fallback_rule_engine.py`:
+
+  * HSV color analysis (green/yellow ratio)
+  * Edge pattern detection
+  * Shape contour analysis
+
+##### 3.4 Result Display
+
+* Show:
+
+  * Disease class
+  * Confidence level
+  * Annotated image
+  * Treatment suggestion (static or from a database)
+
+---
+
+#### 📋 4. **Admin-Side Functionality**
+
+* **Model Training Interface:**
+
+  * Allow uploading of new labeled datasets.
+  * Trigger retraining of `UNetModel` (optional on Replit due to resource limits).
+* **Logs and Feedback Viewer:**
+
+  * View logs from `logs/prediction_log.csv`.
+  * Review flagged results for model improvement.
+
+---
+
+#### 🔁 5. **User Feedback Loop**
+
+* On result page, add a button:
+
+  * “Incorrect Diagnosis? Flag for Review”
+* Store flagged images in a feedback folder or database.
+
+---
+
+#### 🌐 6. **User Interface Design**
+
+* **Homepage:** Upload section, About System
+* **Result Page:** Show disease class, image, annotated hints
+* **Admin Dashboard:** Tabs for training, logs, flagged images
+* Ensure offline capability:
+
+  * Use local file storage
+  * No API dependencies
+
+---
+
+#### 📌 7. **Objective and Research Question Alignment**
+
+* ✅ Use deep learning (UNet) to classify diseases.
+* ✅ Integrate fallback logic to boost accuracy.
+* ✅ Provide an intuitive interface with real-time results and visual guidance.
+* ✅ Enable continuous improvement through feedback and logs.
+
+---
+
+### 💡 Bonus Tips
+
+* Use joblib to save/load any traditional ML models or handcrafted feature classifiers.
+* If Replit lacks GPU power, consider local training and uploading trained `.pth` files.
+* Ensure that every major function logs predictions, timestamps, user type, and confidence level.
+
+---
+
+Let me know if you'd like me to generate any **starter code**, **UI templates**, or **model loader functions**.
