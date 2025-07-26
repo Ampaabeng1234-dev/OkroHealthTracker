@@ -29,8 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+py
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
-    "pool_reset_on_return": "commit",
-    "connect_args": {"sslmode": "prefer"}
+    "pool_reset_on_return": "commit"
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
