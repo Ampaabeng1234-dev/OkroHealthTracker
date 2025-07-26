@@ -25,12 +25,11 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "okro_health_detector_secret_key")
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:Samuel@127.0.0.1:3306/okra')
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
-    "pool_reset_on_return": "commit",
-    "connect_args": {"sslmode": "prefer"}
+    "pool_reset_on_return": "commit"
 }
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

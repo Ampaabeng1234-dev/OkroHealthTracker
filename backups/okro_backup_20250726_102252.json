@@ -1,0 +1,646 @@
+{
+  "backup_info": {
+    "created_at": "2025-07-26T10:22:52.348736",
+    "version": "1.0",
+    "application": "OkroHealthDetector",
+    "total_tables": 11,
+    "total_records": 51
+  },
+  "tables": {
+    "users": {
+      "table_name": "users",
+      "record_count": 4,
+      "data": [
+        {
+          "id": 1,
+          "username": "admin",
+          "email": "admin@okrohealth.com",
+          "password_hash": "scrypt:32768:8:1$m67aMQ8fvqgG54Yl$267870a6d8967414d9a9e67ee1d263db081ac99137997ed0dc88796aef4622faa4d9a71cbf820767a7249b9c5f05aa0807689abf7f08f3d20b72190a5210fd1d",
+          "role": "admin",
+          "active": false,
+          "created_at": "2025-07-18T06:56:29.941900",
+          "last_login": "2025-07-18T07:31:46.622350"
+        },
+        {
+          "id": 4,
+          "username": "Ashie",
+          "email": "izoora4@gmail.com",
+          "password_hash": "scrypt:32768:8:1$H8e2UnCzyWyYCdDE$8f9e2052371e5962362acac3e84c9c1cb393bc40c57c6e06eed8189d6bde743cd387878087798f4edf3743dc387ded102d91df067a8c3de4f1207225fba5fb85",
+          "role": "user",
+          "active": true,
+          "created_at": "2025-07-18T07:42:32.814919",
+          "last_login": "2025-07-18T07:58:37.223993"
+        },
+        {
+          "id": 3,
+          "username": "Samuel",
+          "email": "projecthosting425@gmail.com",
+          "password_hash": "scrypt:32768:8:1$MUe6NANa3ZIRDEhE$d6afc6f952c785995749055d5027961355c439b336a0855005e2092a3aed548fbe47432e963f91f28dde8473c940bc2c209de768dc026286535558f2672ac91e",
+          "role": "admin",
+          "active": true,
+          "created_at": "2025-07-18T07:06:02.973192",
+          "last_login": "2025-07-22T15:27:08.981383"
+        },
+        {
+          "id": 2,
+          "username": "demo_user",
+          "email": "user@okrohealth.com",
+          "password_hash": "scrypt:32768:8:1$NEfmzpyrMmBfnJmR$1485e321e8c222b06ee28b9839c4e67f7c6bfedd57f43ed6a5d062426f6d55b6a9bdebae97f7121b1d328a9af237490b4cd560898043b1ae0172c31aa0215b12",
+          "role": "user",
+          "active": true,
+          "created_at": "2025-07-18T06:56:29.941903",
+          "last_login": "2025-07-22T15:48:43.243072"
+        }
+      ]
+    },
+    "predictions": {
+      "table_name": "predictions",
+      "record_count": 12,
+      "data": [
+        {
+          "id": 3,
+          "user_id": 4,
+          "filename": "d8d177db-c9d0-4459-a20d-2d5ffce975db_image00012.jpeg",
+          "original_filename": "image00012.jpeg",
+          "prediction": "Invalid Input",
+          "confidence": 0.0,
+          "method": "validation_rejected",
+          "created_at": "2025-07-18T07:43:17.794995",
+          "all_probabilities": null,
+          "dl_confidence": null,
+          "rule_confidence": null,
+          "processing_time": 7.152557373046875e-07
+        },
+        {
+          "id": 4,
+          "user_id": 4,
+          "filename": "b0b0e035-09ae-4145-8a63-461f06ecea53_image00012.jpeg",
+          "original_filename": "image00012.jpeg",
+          "prediction": "Invalid Input",
+          "confidence": 0.0,
+          "method": "validation_rejected",
+          "created_at": "2025-07-18T07:46:48.697082",
+          "all_probabilities": null,
+          "dl_confidence": null,
+          "rule_confidence": null,
+          "processing_time": 7.152557373046875e-07
+        },
+        {
+          "id": 5,
+          "user_id": 4,
+          "filename": "5d04d203-d9fb-43b4-b468-ce160840d2b8_image00013.jpeg",
+          "original_filename": "image00013.jpeg",
+          "prediction": "Invalid Input",
+          "confidence": 0.0,
+          "method": "validation_rejected",
+          "created_at": "2025-07-18T07:50:07.456103",
+          "all_probabilities": null,
+          "dl_confidence": null,
+          "rule_confidence": null,
+          "processing_time": 7.152557373046875e-07
+        },
+        {
+          "id": 6,
+          "user_id": 4,
+          "filename": "39be4196-4092-4ee9-924d-f140a4a1357d_image00012.jpeg",
+          "original_filename": "image00012.jpeg",
+          "prediction": "Processing Error",
+          "confidence": 0.0,
+          "method": "preprocessing_failed",
+          "created_at": "2025-07-18T07:58:59.509118",
+          "all_probabilities": null,
+          "dl_confidence": null,
+          "rule_confidence": null,
+          "processing_time": 2.384185791015625e-07
+        },
+        {
+          "id": 7,
+          "user_id": 4,
+          "filename": "9694c765-7011-43b2-99f1-151f08fb8d56_image00017.jpeg",
+          "original_filename": "image00017.jpeg",
+          "prediction": "Mosaic Virus",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-18T08:03:34.842969",
+          "all_probabilities": "{\"Healthy\": 0.20000246167182922, \"Bacterial Blight\": 0.20002497732639313, \"Leaf Spot\": 0.2000291645526886, \"Mosaic Virus\": 0.19978678226470947, \"Powdery Mildew\": 0.20015664398670197}",
+          "dl_confidence": 0.20015664398670197,
+          "rule_confidence": 0.8,
+          "processing_time": 2.384185791015625e-07
+        },
+        {
+          "id": 8,
+          "user_id": 4,
+          "filename": "fa368c08-db6c-4442-bbd3-387aea1d19d3_image00012.jpeg",
+          "original_filename": "image00012.jpeg",
+          "prediction": "Leaf Spot",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-18T08:08:33.955297",
+          "all_probabilities": "{\"Healthy\": 0.20738965272903442, \"Bacterial Blight\": 0.19974206387996674, \"Leaf Spot\": 0.1951475590467453, \"Mosaic Virus\": 0.19575387239456177, \"Powdery Mildew\": 0.20196682214736938}",
+          "dl_confidence": 0.20738965272903442,
+          "rule_confidence": 0.8,
+          "processing_time": 4.76837158203125e-07
+        },
+        {
+          "id": 9,
+          "user_id": 3,
+          "filename": "071bdb15-4f83-4763-a062-674c03ebbb8e_image00014.jpeg",
+          "original_filename": "image00014.jpeg",
+          "prediction": "Mosaic Virus",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-21T11:03:09.914787",
+          "all_probabilities": "{\"Healthy\": 0.20797502994537354, \"Bacterial Blight\": 0.19399535655975342, \"Leaf Spot\": 0.20482617616653442, \"Mosaic Virus\": 0.19491374492645264, \"Powdery Mildew\": 0.1982896476984024}",
+          "dl_confidence": 0.20797502994537354,
+          "rule_confidence": 0.8,
+          "processing_time": 2.384185791015625e-07
+        },
+        {
+          "id": 10,
+          "user_id": 2,
+          "filename": "5fb4c3b5-af92-4db3-80ae-bc3267bf4b80_image00016.jpeg",
+          "original_filename": "image00016.jpeg",
+          "prediction": "Mosaic Virus",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-21T11:05:35.915694",
+          "all_probabilities": "{\"Healthy\": 0.20506185293197632, \"Bacterial Blight\": 0.19307298958301544, \"Leaf Spot\": 0.1998010277748108, \"Mosaic Virus\": 0.20281481742858887, \"Powdery Mildew\": 0.19924937188625336}",
+          "dl_confidence": 0.20506185293197632,
+          "rule_confidence": 0.8,
+          "processing_time": 4.76837158203125e-07
+        },
+        {
+          "id": 11,
+          "user_id": 2,
+          "filename": "19c8e136-8499-42d0-b4c4-24d0d8c6501b_R.jpeg",
+          "original_filename": "R.jpeg",
+          "prediction": "Mosaic Virus",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-21T11:06:44.403823",
+          "all_probabilities": "{\"Healthy\": 0.2044771909713745, \"Bacterial Blight\": 0.1927403211593628, \"Leaf Spot\": 0.20013953745365143, \"Mosaic Virus\": 0.20141644775867462, \"Powdery Mildew\": 0.20122645795345306}",
+          "dl_confidence": 0.2044771909713745,
+          "rule_confidence": 0.8,
+          "processing_time": 2.384185791015625e-07
+        },
+        {
+          "id": 12,
+          "user_id": 2,
+          "filename": "9d49d000-9972-4cba-b874-88fe318f6097_okra_bacterial_leaf_spot.jpg",
+          "original_filename": "okra_bacterial_leaf_spot.jpg",
+          "prediction": "Mosaic Virus",
+          "confidence": 0.6025748062133789,
+          "method": "hybrid",
+          "created_at": "2025-07-21T11:07:09.599315",
+          "all_probabilities": "{\"Healthy\": 0.2040330320596695, \"Bacterial Blight\": 0.1916341632604599, \"Leaf Spot\": 0.20090891420841217, \"Mosaic Virus\": 0.20429134368896484, \"Powdery Mildew\": 0.1991325318813324}",
+          "dl_confidence": 0.20429134368896484,
+          "rule_confidence": 0.8,
+          "processing_time": 2.384185791015625e-07
+        },
+        {
+          "id": 13,
+          "user_id": 2,
+          "filename": "1ca11355-0db7-421e-a693-0acedc0eb5d8_IMG-20250115-WA0054.jpg",
+          "original_filename": "IMG-20250115-WA0054.jpg",
+          "prediction": "Leaf Spot",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-22T14:36:35.534301",
+          "all_probabilities": "{\"Healthy\": 0.20678600668907166, \"Bacterial Blight\": 0.1978759765625, \"Leaf Spot\": 0.2010265588760376, \"Mosaic Virus\": 0.19938874244689941, \"Powdery Mildew\": 0.19492267072200775}",
+          "dl_confidence": 0.20678600668907166,
+          "rule_confidence": 0.8,
+          "processing_time": 2.384185791015625e-07
+        },
+        {
+          "id": 14,
+          "user_id": 2,
+          "filename": "7819efbf-1576-4412-881b-9113be423715_image00009.jpeg",
+          "original_filename": "image00009.jpeg",
+          "prediction": "Mosaic Virus",
+          "confidence": 0.6400000000000001,
+          "method": "hybrid",
+          "created_at": "2025-07-22T14:40:26.834849",
+          "all_probabilities": "{\"Healthy\": 0.2068922519683838, \"Bacterial Blight\": 0.19770070910453796, \"Leaf Spot\": 0.2010364830493927, \"Mosaic Virus\": 0.19903768599033356, \"Powdery Mildew\": 0.19533281028270721}",
+          "dl_confidence": 0.2068922519683838,
+          "rule_confidence": 0.8,
+          "processing_time": 2.384185791015625e-07
+        }
+      ]
+    },
+    "user_feedback": {
+      "table_name": "user_feedback",
+      "record_count": 0,
+      "data": []
+    },
+    "system_logs": {
+      "table_name": "system_logs",
+      "record_count": 22,
+      "data": [
+        {
+          "id": 1,
+          "user_id": null,
+          "event_type": "failed_login",
+          "event_data": "{\"username\": \"user\"}",
+          "ip_address": "154.161.25.189, 10.83.2.149",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:11:34.625779"
+        },
+        {
+          "id": 2,
+          "user_id": null,
+          "event_type": "failed_login",
+          "event_data": "{\"username\": \"user\"}",
+          "ip_address": "154.161.25.189, 10.83.3.241",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:12:06.301189"
+        },
+        {
+          "id": 3,
+          "user_id": null,
+          "event_type": "failed_login",
+          "event_data": "{\"username\": \"user\"}",
+          "ip_address": "154.161.25.189, 10.83.2.149",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:12:20.870703"
+        },
+        {
+          "id": 4,
+          "user_id": null,
+          "event_type": "failed_login",
+          "event_data": "{\"username\": \"user\"}",
+          "ip_address": "154.161.25.189, 10.83.3.241",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:12:34.540168"
+        },
+        {
+          "id": 5,
+          "user_id": 2,
+          "event_type": "login",
+          "event_data": "{\"username\": \"demo_user\"}",
+          "ip_address": "154.161.25.189, 10.83.3.241",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:14:42.234146"
+        },
+        {
+          "id": 6,
+          "user_id": 2,
+          "event_type": "login",
+          "event_data": "{\"username\": \"demo_user\"}",
+          "ip_address": "154.161.25.189, 10.83.1.74",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:23:24.108261"
+        },
+        {
+          "id": 7,
+          "user_id": 1,
+          "event_type": "login",
+          "event_data": "{\"username\": \"admin\"}",
+          "ip_address": "154.161.25.189, 10.83.1.74",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:31:46.739977"
+        },
+        {
+          "id": 8,
+          "user_id": 3,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Samuel\"}",
+          "ip_address": "154.161.25.189, 10.83.3.241",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:37:05.929828"
+        },
+        {
+          "id": 9,
+          "user_id": 3,
+          "event_type": "user_status_changed",
+          "event_data": "{\"target_user\": \"admin\", \"new_status\": \"deactivated\"}",
+          "ip_address": "154.161.25.189, 10.83.1.74",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:38:26.345607"
+        },
+        {
+          "id": 10,
+          "user_id": 3,
+          "event_type": "logs_cleared",
+          "event_data": "{\"log_type\": \"predictions\"}",
+          "ip_address": "154.161.25.189, 10.83.1.74",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:41:09.909656"
+        },
+        {
+          "id": 11,
+          "user_id": 4,
+          "event_type": "registration",
+          "event_data": "{\"username\": \"Ashie\", \"email\": \"izoora4@gmail.com\", \"role\": \"user\"}",
+          "ip_address": "154.161.25.189, 10.83.9.133",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:42:32.925686"
+        },
+        {
+          "id": 12,
+          "user_id": 4,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Ashie\"}",
+          "ip_address": "154.161.25.189, 10.83.9.133",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T07:58:37.342260"
+        },
+        {
+          "id": 13,
+          "user_id": 3,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Samuel\"}",
+          "ip_address": "154.161.25.189, 10.83.1.74",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-18T08:11:17.296403"
+        },
+        {
+          "id": 14,
+          "user_id": 3,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Samuel\"}",
+          "ip_address": "154.161.26.60, 10.83.7.207",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-21T11:01:35.562163"
+        },
+        {
+          "id": 15,
+          "user_id": null,
+          "event_type": "failed_login",
+          "event_data": "{\"username\": \"Ashie\"}",
+          "ip_address": "154.161.26.60, 10.83.1.88",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-21T11:04:54.685946"
+        },
+        {
+          "id": 16,
+          "user_id": 2,
+          "event_type": "login",
+          "event_data": "{\"username\": \"demo_user\"}",
+          "ip_address": "154.161.26.60, 10.83.5.150",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-21T11:05:01.578643"
+        },
+        {
+          "id": 17,
+          "user_id": 2,
+          "event_type": "login",
+          "event_data": "{\"username\": \"demo_user\"}",
+          "ip_address": "154.160.6.98, 10.83.6.26",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-22T14:35:29.227379"
+        },
+        {
+          "id": 18,
+          "user_id": 3,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Samuel\"}",
+          "ip_address": "154.160.6.98, 10.83.1.88",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-22T14:40:50.747324"
+        },
+        {
+          "id": 19,
+          "user_id": 3,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Samuel\"}",
+          "ip_address": "154.160.6.98, 10.83.3.15",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-22T15:19:50.610281"
+        },
+        {
+          "id": 20,
+          "user_id": null,
+          "event_type": "failed_login",
+          "event_data": "{\"username\": \"admin\"}",
+          "ip_address": "127.0.0.1",
+          "user_agent": "curl/8.14.1",
+          "created_at": "2025-07-22T15:22:48.981776"
+        },
+        {
+          "id": 21,
+          "user_id": 3,
+          "event_type": "login",
+          "event_data": "{\"username\": \"Samuel\"}",
+          "ip_address": "154.160.6.98, 10.83.1.88",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-22T15:27:09.092923"
+        },
+        {
+          "id": 22,
+          "user_id": 2,
+          "event_type": "login",
+          "event_data": "{\"username\": \"demo_user\"}",
+          "ip_address": "154.160.6.98, 10.83.5.150",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "created_at": "2025-07-22T15:48:43.359238"
+        }
+      ]
+    },
+    "disease_classes": {
+      "table_name": "disease_classes",
+      "record_count": 5,
+      "data": [
+        {
+          "id": 1,
+          "name": "Healthy",
+          "description": "Plant appears healthy with no visible signs of disease",
+          "treatment": "Continue regular care. Monitor plant health regularly.",
+          "severity_level": 1,
+          "active": true,
+          "created_at": "2025-07-18T06:56:29.634353",
+          "updated_at": "2025-07-18T06:56:29.634356"
+        },
+        {
+          "id": 2,
+          "name": "Bacterial Blight",
+          "description": "Bacterial infection causing leaf spots and wilting",
+          "treatment": "Remove infected leaves. Apply copper-based bactericide. Ensure good drainage.",
+          "severity_level": 4,
+          "active": true,
+          "created_at": "2025-07-18T06:56:29.634357",
+          "updated_at": "2025-07-18T06:56:29.634358"
+        },
+        {
+          "id": 3,
+          "name": "Leaf Spot",
+          "description": "Fungal infection causing circular spots on leaves",
+          "treatment": "Remove affected leaves. Apply fungicide. Avoid overhead watering.",
+          "severity_level": 3,
+          "active": true,
+          "created_at": "2025-07-18T06:56:29.634360",
+          "updated_at": "2025-07-18T06:56:29.634360"
+        },
+        {
+          "id": 4,
+          "name": "Mosaic Virus",
+          "description": "Viral infection causing mottled yellow and green patterns",
+          "treatment": "Remove infected plants. Control aphid vectors. Use resistant varieties.",
+          "severity_level": 5,
+          "active": true,
+          "created_at": "2025-07-18T06:56:29.634361",
+          "updated_at": "2025-07-18T06:56:29.634362"
+        },
+        {
+          "id": 5,
+          "name": "Powdery Mildew",
+          "description": "Fungal infection causing white powdery coating on leaves",
+          "treatment": "Apply sulfur-based fungicide. Improve air circulation. Reduce humidity.",
+          "severity_level": 3,
+          "active": true,
+          "created_at": "2025-07-18T06:56:29.634362",
+          "updated_at": "2025-07-18T06:56:29.634362"
+        }
+      ]
+    },
+    "user_profiles": {
+      "table_name": "user_profiles",
+      "record_count": 0,
+      "data": []
+    },
+    "training_data": {
+      "table_name": "training_data",
+      "record_count": 6,
+      "data": [
+        {
+          "id": 1,
+          "filename": "demo_healthy_leaf.jpg",
+          "original_filename": "healthy_leaf.jpg",
+          "disease_class": "Healthy",
+          "file_path": "static/training_data/Healthy/demo_healthy_leaf.jpg",
+          "file_size": 12345,
+          "image_width": 224,
+          "image_height": 224,
+          "uploaded_by": 1,
+          "upload_date": "2025-07-22T15:23:09.656416",
+          "is_validated": true,
+          "validation_notes": null
+        },
+        {
+          "id": 2,
+          "filename": "demo_healthy_leaf.jpg",
+          "original_filename": "healthy_leaf.jpg",
+          "disease_class": "Healthy",
+          "file_path": "static/training_data/Healthy/demo_healthy_leaf.jpg",
+          "file_size": 12345,
+          "image_width": 224,
+          "image_height": 224,
+          "uploaded_by": 1,
+          "upload_date": "2025-07-22T15:23:15.165966",
+          "is_validated": true,
+          "validation_notes": null
+        },
+        {
+          "id": 3,
+          "filename": "demo_bacterial_leaf.jpg",
+          "original_filename": "bacterial_leaf.jpg",
+          "disease_class": "Bacterial_Blight",
+          "file_path": "static/training_data/Bacterial_Blight/demo_bacterial_leaf.jpg",
+          "file_size": 15234,
+          "image_width": 224,
+          "image_height": 224,
+          "uploaded_by": 1,
+          "upload_date": "2025-07-22T15:23:23.517344",
+          "is_validated": true,
+          "validation_notes": null
+        },
+        {
+          "id": 4,
+          "filename": "demo_leaf_spot.jpg",
+          "original_filename": "leaf_spot.jpg",
+          "disease_class": "Leaf_Spot",
+          "file_path": "static/training_data/Leaf_Spot/demo_leaf_spot.jpg",
+          "file_size": 13456,
+          "image_width": 224,
+          "image_height": 224,
+          "uploaded_by": 1,
+          "upload_date": "2025-07-22T15:23:23.517344",
+          "is_validated": true,
+          "validation_notes": null
+        },
+        {
+          "id": 5,
+          "filename": "demo_mosaic.jpg",
+          "original_filename": "mosaic_virus.jpg",
+          "disease_class": "Mosaic_Virus",
+          "file_path": "static/training_data/Mosaic_Virus/demo_mosaic.jpg",
+          "file_size": 14567,
+          "image_width": 224,
+          "image_height": 224,
+          "uploaded_by": 1,
+          "upload_date": "2025-07-22T15:23:23.517344",
+          "is_validated": true,
+          "validation_notes": null
+        },
+        {
+          "id": 6,
+          "filename": "demo_powdery.jpg",
+          "original_filename": "powdery_mildew.jpg",
+          "disease_class": "Powdery_Mildew",
+          "file_path": "static/training_data/Powdery_Mildew/demo_powdery.jpg",
+          "file_size": 16789,
+          "image_width": 224,
+          "image_height": 224,
+          "uploaded_by": 1,
+          "upload_date": "2025-07-22T15:23:23.517344",
+          "is_validated": true,
+          "validation_notes": null
+        }
+      ]
+    },
+    "model_training": {
+      "table_name": "model_training",
+      "record_count": 2,
+      "data": [
+        {
+          "id": 1,
+          "training_name": "Demo Training Session",
+          "model_version": "demo_v1",
+          "training_status": "completed",
+          "training_start": "2025-07-22T15:23:09.571877",
+          "training_end": "2025-07-22T15:23:09.571880",
+          "total_images": 25,
+          "training_accuracy": 0.92,
+          "validation_accuracy": 0.88,
+          "epochs_completed": 10,
+          "total_epochs": 10,
+          "model_file_path": null,
+          "training_log": null,
+          "created_by": 1,
+          "created_at": "2025-07-22T15:23:09.594416"
+        },
+        {
+          "id": 2,
+          "training_name": "Demo UNet Training",
+          "model_version": "demo_v1.0",
+          "training_status": "completed",
+          "training_start": "2025-07-22T13:23:30.492670",
+          "training_end": "2025-07-22T14:53:30.492670",
+          "total_images": 25,
+          "training_accuracy": 0.92,
+          "validation_accuracy": 0.88,
+          "epochs_completed": 10,
+          "total_epochs": 10,
+          "model_file_path": null,
+          "training_log": null,
+          "created_by": 1,
+          "created_at": "2025-07-22T15:23:30.492670"
+        }
+      ]
+    },
+    "chatbot_config": {
+      "table_name": "chatbot_config",
+      "record_count": 0,
+      "data": []
+    },
+    "chat_conversations": {
+      "table_name": "chat_conversations",
+      "record_count": 0,
+      "data": []
+    },
+    "chat_messages": {
+      "table_name": "chat_messages",
+      "record_count": 0,
+      "data": []
+    }
+  }
+}
