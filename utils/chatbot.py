@@ -15,6 +15,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+DISABLE_OPENAI = os.getenv("DISABLE_OPENAI", "false").lower() == "true"
+
+if DISABLE_OPENAI:
+    logger.info("OpenAI integration is disabled via DISABLE_OPENAI flag.")
+    OPENAI_AVAILABLE = False
+
+if not OPENAI_AVAILABLE or not os.getenv("OPENAI_API_KEY"):
+    logger.info(
+        "OpenAI not available. If you want to enable it:\n"
+        "- Install: pip install openai\n"
+        "- Set environment variable: export OPENAI_API_KEY='your_key_here'\n"
+        "Or set DISABLE_OPENAI=true to suppress this message."
+    )
+
 class ChatbotService:
     """Service for managing chatbot interactions with OpenAI"""
     
@@ -27,8 +41,6 @@ class ChatbotService:
             except Exception as e:
                 logger.error(f"Failed to initialize OpenAI client: {e}")
                 self.openai_client = None
-        else:
-            logger.warning("OpenAI not available - API key missing or package not installed")
     
     def is_available(self) -> bool:
         """Check if the chatbot service is available"""
